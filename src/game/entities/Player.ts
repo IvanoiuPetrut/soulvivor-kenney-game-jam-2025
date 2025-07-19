@@ -47,9 +47,8 @@ export class Player implements GameEntity {
 
         // Enable physics on the player sprite
         scene.physics.add.existing(this.sprite);
-        (this.sprite.body as Phaser.Physics.Arcade.Body).setCollideWorldBounds(
-            true
-        );
+        // Remove world bounds restriction for infinite movement
+        // (this.sprite.body as Phaser.Physics.Arcade.Body).setCollideWorldBounds(true);
 
         // Start idle animation
         this.startIdleAnimation();
@@ -64,19 +63,19 @@ export class Player implements GameEntity {
         this.position.x = this.sprite.x;
         this.position.y = this.sprite.y;
 
-        // Keep player within bounds (accounting for sprite size)
-        const spriteHalfSize =
-            (GAME_CONFIG.baseSpriteSize * GAME_CONFIG.spriteScale) / 2;
-        this.sprite.x = Phaser.Math.Clamp(
-            this.sprite.x,
-            spriteHalfSize,
-            GAME_CONFIG.width - spriteHalfSize
-        );
-        this.sprite.y = Phaser.Math.Clamp(
-            this.sprite.y,
-            spriteHalfSize,
-            GAME_CONFIG.height - spriteHalfSize
-        );
+        // Remove world bounds clamping for infinite movement
+        // const spriteHalfSize =
+        //     (GAME_CONFIG.baseSpriteSize * GAME_CONFIG.spriteScale) / 2;
+        // this.sprite.x = Phaser.Math.Clamp(
+        //     this.sprite.x,
+        //     spriteHalfSize,
+        //     GAME_CONFIG.width - spriteHalfSize
+        // );
+        // this.sprite.y = Phaser.Math.Clamp(
+        //     this.sprite.y,
+        //     spriteHalfSize,
+        //     GAME_CONFIG.height - spriteHalfSize
+        // );
 
         // Update movement state for animations
         this.updateMovementState();

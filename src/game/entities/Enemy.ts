@@ -50,9 +50,10 @@ export abstract class Enemy implements GameEntity {
 
         // Enable physics
         scene.physics.add.existing(this.sprite);
-        (this.sprite.body as Phaser.Physics.Arcade.Body).setCollideWorldBounds(
-            !behavior.canPassThroughWalls
-        );
+        // Remove world bounds restriction for infinite movement
+        // (this.sprite.body as Phaser.Physics.Arcade.Body).setCollideWorldBounds(
+        //     !behavior.canPassThroughWalls
+        // );
     }
 
     update(deltaTime: number): void {
@@ -69,21 +70,21 @@ export abstract class Enemy implements GameEntity {
         this.position.x = this.sprite.x;
         this.position.y = this.sprite.y;
 
-        // Keep within bounds (unless ghost can pass through walls)
-        if (!this.behavior.canPassThroughWalls) {
-            const spriteHalfSize =
-                (GAME_CONFIG.baseSpriteSize * GAME_CONFIG.spriteScale) / 2;
-            this.sprite.x = Phaser.Math.Clamp(
-                this.sprite.x,
-                spriteHalfSize,
-                GAME_CONFIG.width - spriteHalfSize
-            );
-            this.sprite.y = Phaser.Math.Clamp(
-                this.sprite.y,
-                spriteHalfSize,
-                GAME_CONFIG.height - spriteHalfSize
-            );
-        }
+        // Remove world bounds clamping for infinite movement
+        // if (!this.behavior.canPassThroughWalls) {
+        //     const spriteHalfSize =
+        //         (GAME_CONFIG.baseSpriteSize * GAME_CONFIG.spriteScale) / 2;
+        //     this.sprite.x = Phaser.Math.Clamp(
+        //         this.sprite.x,
+        //         spriteHalfSize,
+        //         GAME_CONFIG.width - spriteHalfSize
+        //     );
+        //     this.sprite.y = Phaser.Math.Clamp(
+        //         this.sprite.y,
+        //         spriteHalfSize,
+        //         GAME_CONFIG.height - spriteHalfSize
+        //     );
+        // }
 
         // Update specific enemy behavior
         this.updateBehavior(deltaTime);
@@ -202,7 +203,7 @@ export class MageEnemy extends Enemy {
             canPassThroughWalls: false,
             hasRangedAttack: true,
             attackPattern: "ranged",
-            aggroRange: 250,
+            aggroRange: Infinity, // Follow player at infinite distance
         };
 
         super(scene, config, stats, behavior);
@@ -213,17 +214,15 @@ export class MageEnemy extends Enemy {
 
         const distanceToTarget = this.getDistanceToTarget();
 
-        // If target is within aggro range, start pursuing
-        if (distanceToTarget <= this.behavior.aggroRange) {
-            // If in attack range, stop moving and attack
-            if (this.isInAttackRange() && this.canAttack()) {
-                this.velocity.x = 0;
-                this.velocity.y = 0;
-                this.attack();
-            } else if (!this.isInAttackRange()) {
-                // Move towards target but maintain some distance
-                this.moveTowardsTarget();
-            }
+        // Always pursue since aggro range is infinite
+        // If in attack range, stop moving and attack
+        if (this.isInAttackRange() && this.canAttack()) {
+            this.velocity.x = 0;
+            this.velocity.y = 0;
+            this.attack();
+        } else if (!this.isInAttackRange()) {
+            // Move towards target but maintain some distance
+            this.moveTowardsTarget();
         }
     }
 
@@ -305,7 +304,7 @@ export class CrabEnemy extends Enemy {
             canPassThroughWalls: false,
             hasRangedAttack: false,
             attackPattern: "melee",
-            aggroRange: 180,
+            aggroRange: Infinity, // Follow player at infinite distance
         };
 
         super(scene, config, stats, behavior);
@@ -316,13 +315,11 @@ export class CrabEnemy extends Enemy {
 
         const distanceToTarget = this.getDistanceToTarget();
 
-        // If target is within aggro range, pursue aggressively
-        if (distanceToTarget <= this.behavior.aggroRange) {
-            if (this.isInAttackRange() && this.canAttack()) {
-                this.attack();
-            } else {
-                this.moveTowardsTarget();
-            }
+        // Always pursue aggressively since aggro range is infinite
+        if (this.isInAttackRange() && this.canAttack()) {
+            this.attack();
+        } else {
+            this.moveTowardsTarget();
         }
     }
 
@@ -370,7 +367,7 @@ export class GhostEnemy extends Enemy {
             canPassThroughWalls: true,
             hasRangedAttack: false,
             attackPattern: "special",
-            aggroRange: 200,
+            aggroRange: Infinity, // Follow player at infinite distance
         };
 
         super(scene, config, stats, behavior);
@@ -385,13 +382,11 @@ export class GhostEnemy extends Enemy {
 
         const distanceToTarget = this.getDistanceToTarget();
 
-        // Ghost is very aggressive and always pursues when in range
-        if (distanceToTarget <= this.behavior.aggroRange) {
-            if (this.isInAttackRange() && this.canAttack()) {
-                this.attack();
-            } else {
-                this.moveTowardsTarget();
-            }
+        // Ghost is very aggressive and always pursues since aggro range is infinite
+        if (this.isInAttackRange() && this.canAttack()) {
+            this.attack();
+        } else {
+            this.moveTowardsTarget();
         }
     }
 

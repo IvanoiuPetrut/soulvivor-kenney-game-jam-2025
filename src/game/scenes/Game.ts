@@ -45,17 +45,18 @@ export class Game extends Scene {
             map.createLayer("Objects", tileset);
         }
 
-        // Enable physics
-        this.physics.world.setBounds(
-            0,
-            0,
-            GAME_CONFIG.width,
-            GAME_CONFIG.height
-        );
+        // Enable physics (no bounds - free movement)
+        // this.physics.world.setBounds(0, 0, GAME_CONFIG.width, GAME_CONFIG.height);
 
         // Initialize game manager
         this.gameManager = new GameManager(this);
         this.gameManager.initialize();
+
+        // Set up camera to follow the player
+        const player = this.gameManager.getPlayer();
+        this.camera.startFollow(player.sprite);
+        this.camera.setLerp(0.1, 0.1); // Smooth camera movement
+        this.camera.setDeadzone(50, 50); // Small deadzone for smoother following
 
         EventBus.emit("current-scene-ready", this);
     }
