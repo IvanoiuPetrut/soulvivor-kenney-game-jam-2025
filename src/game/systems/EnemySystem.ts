@@ -22,22 +22,22 @@ export class EnemySystem {
     }
 
     private initializeSpawnConfigs(): void {
-        // Start with basic spawn rates - we can make this dynamic later
+        // Aggressive spawn rates for constant pressure
         this.spawnConfigs = [
             {
                 enemyType: EnemyType.CRAB,
-                spawnRate: 0.3, // Every ~3 seconds
-                maxCount: 3,
+                spawnRate: 0.8, // Every ~1.25 seconds (much faster)
+                maxCount: 15, // Allow many more enemies
             },
             {
                 enemyType: EnemyType.MAGE,
-                spawnRate: 0.2, // Every ~5 seconds
-                maxCount: 2,
+                spawnRate: 0.6, // Every ~1.67 seconds (much faster)
+                maxCount: 10, // Allow many more enemies
             },
             {
                 enemyType: EnemyType.GHOST,
-                spawnRate: 0.25, // Every ~4 seconds
-                maxCount: 2,
+                spawnRate: 0.7, // Every ~1.43 seconds (much faster)
+                maxCount: 12, // Allow many more enemies
             },
         ];
 
@@ -45,6 +45,18 @@ export class EnemySystem {
         this.spawnConfigs.forEach((config) => {
             this.lastSpawnTimes.set(config.enemyType, 0);
         });
+
+        // Enable unlimited spawning for maximum pressure
+        this.enableUnlimitedSpawning();
+    }
+
+    // Method to remove spawn limits for extreme pressure
+    private enableUnlimitedSpawning(): void {
+        this.spawnConfigs.forEach((config) => {
+            config.maxCount = Infinity; // Remove all limits
+            config.spawnRate *= 1.5; // Make spawning even faster
+        });
+        console.log("Unlimited spawning enabled - maximum pressure mode!");
     }
 
     setPlayer(player: Player): void {
@@ -86,6 +98,14 @@ export class EnemySystem {
                 if (currentCount < config.maxCount) {
                     this.spawnEnemy(config.enemyType);
                     this.lastSpawnTimes.set(config.enemyType, currentTime);
+
+                    // Log pressure level every 10th enemy
+                    const totalEnemies = this.getTotalEnemyCount();
+                    if (totalEnemies % 10 === 0) {
+                        console.log(
+                            `Enemy pressure: ${totalEnemies} enemies active`
+                        );
+                    }
                 }
             }
         });
@@ -135,34 +155,26 @@ export class EnemySystem {
     }
 
     private getRandomSpawnPosition(): { x: number; y: number } {
-        // Spawn enemies off-screen or at screen edges
-        const margin = 50;
-        const side = Math.floor(Math.random() * 4); // 0: top, 1: right, 2: bottom, 3: left
-
-        switch (side) {
-            case 0: // Top
-                return {
-                    x: Math.random() * GAME_CONFIG.width,
-                    y: -margin,
-                };
-            case 1: // Right
-                return {
-                    x: GAME_CONFIG.width + margin,
-                    y: Math.random() * GAME_CONFIG.height,
-                };
-            case 2: // Bottom
-                return {
-                    x: Math.random() * GAME_CONFIG.width,
-                    y: GAME_CONFIG.height + margin,
-                };
-            case 3: // Left
-                return {
-                    x: -margin,
-                    y: Math.random() * GAME_CONFIG.height,
-                };
-            default:
-                return { x: 0, y: 0 };
+        if (!this.player) {
+            return { x: 0, y: 0 };
         }
+
+        // Spawn enemies in a circle around the player
+        const minDistance = 200; // Minimum distance from player
+        const maxDistance = 400; // Maximum distance from player
+
+        // Random distance within range
+        const distance =
+            minDistance + Math.random() * (maxDistance - minDistance);
+
+        // Random angle (full circle)
+        const angle = Math.random() * Math.PI * 2;
+
+        // Calculate position
+        const x = this.player.position.x + Math.cos(angle) * distance;
+        const y = this.player.position.y + Math.sin(angle) * distance;
+
+        return { x, y };
     }
 
     getEnemies(): Enemy[] {

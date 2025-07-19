@@ -115,13 +115,10 @@ export class GameManager {
         this.scene.events.on(
             "enemySpawned",
             (enemySprite: Phaser.GameObjects.Sprite, enemyType: EnemyType) => {
-                // Set up collision detection if this is a Game scene
-                if (this.scene instanceof Game) {
-                    // Only set up collision for enemies that can't pass through walls
-                    if (enemyType !== EnemyType.GHOST) {
-                        this.scene.setupEnemyCollision(enemySprite);
-                    }
-                }
+                // All enemies can now pass through obstacles - no collision setup needed
+                console.log(
+                    `Enemy ${enemyType} spawned without collision detection`
+                );
             }
         );
     }

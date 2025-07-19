@@ -188,7 +188,7 @@ export class MageEnemy extends Enemy {
         };
 
         const behavior: EnemyBehavior = {
-            canPassThroughWalls: false,
+            canPassThroughWalls: true, // All enemies can now pass through obstacles
             hasRangedAttack: true,
             attackPattern: "ranged",
             aggroRange: Infinity, // Follow player at infinite distance
@@ -294,7 +294,7 @@ export class CrabEnemy extends Enemy {
         };
 
         const behavior: EnemyBehavior = {
-            canPassThroughWalls: false,
+            canPassThroughWalls: true, // All enemies can now pass through obstacles
             hasRangedAttack: false,
             attackPattern: "melee",
             aggroRange: Infinity, // Follow player at infinite distance
@@ -357,7 +357,7 @@ export class GhostEnemy extends Enemy {
         };
 
         const behavior: EnemyBehavior = {
-            canPassThroughWalls: true,
+            canPassThroughWalls: true, // All enemies can now pass through obstacles
             hasRangedAttack: false,
             attackPattern: "special",
             aggroRange: Infinity, // Follow player at infinite distance
