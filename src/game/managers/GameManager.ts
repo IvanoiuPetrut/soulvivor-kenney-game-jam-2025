@@ -112,15 +112,15 @@ export class GameManager {
         );
 
         // Listen for enemy spawns to set up collision detection
-        this.scene.events.on(
-            "enemySpawned",
-            (enemySprite: Phaser.GameObjects.Sprite, enemyType: EnemyType) => {
-                // All enemies can now pass through obstacles - no collision setup needed
-                console.log(
-                    `Enemy ${enemyType} spawned without collision detection`
-                );
-            }
-        );
+        // this.scene.events.on(
+        //     "enemySpawned",
+        //     (enemySprite: Phaser.GameObjects.Sprite, enemyType: EnemyType) => {
+        //         // All enemies can now pass through obstacles - no collision setup needed
+        //         console.log(
+        //             `Enemy ${enemyType} spawned without collision detection`
+        //         );
+        //     }
+        // );
     }
 
     private handleSiphonAttempt(): void {

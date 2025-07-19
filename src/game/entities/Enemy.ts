@@ -360,6 +360,20 @@ export class CrabEnemy extends Enemy {
 
     protected attack(): void {
         this.lastAttackTime = this.scene.time.now;
+        console.log("Crab attack");
+
+        // Check for collision with player and deal damage
+        if (this.target) {
+            const dx = this.sprite.x - this.target.position.x;
+            const dy = this.sprite.y - this.target.position.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+
+            // Use the same attack range as isInAttackRange method
+            if (distance <= this.stats.attackRange) {
+                this.target.takeDamage(this.stats.damage);
+                console.log("Crab deals melee damage!");
+            }
+        }
 
         // Crab pincer attack animation
         this.scene.tweens.add({
@@ -369,9 +383,6 @@ export class CrabEnemy extends Enemy {
             ease: "Power2",
             yoyo: true,
         });
-
-        // TODO: Deal damage to player if in range
-        console.log("Crab attacks with pincers!");
     }
 }
 
@@ -423,6 +434,19 @@ export class GhostEnemy extends Enemy {
     protected attack(): void {
         this.lastAttackTime = this.scene.time.now;
 
+        // Check for collision with player and deal damage
+        if (this.target) {
+            const dx = this.sprite.x - this.target.position.x;
+            const dy = this.sprite.y - this.target.position.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+
+            // Use the same attack range as isInAttackRange method
+            if (distance <= this.stats.attackRange) {
+                this.target.takeDamage(this.stats.damage);
+                console.log("Ghost deals phase damage!");
+            }
+        }
+
         // Ghost phase attack - briefly becomes more solid
         this.scene.tweens.add({
             targets: this.sprite,
@@ -436,9 +460,6 @@ export class GhostEnemy extends Enemy {
                 this.sprite.setAlpha(this.phaseAlpha);
             },
         });
-
-        // TODO: Deal damage to player
-        console.log("Ghost phases through and attacks!");
     }
 
     private startFloatingAnimation(): void {
