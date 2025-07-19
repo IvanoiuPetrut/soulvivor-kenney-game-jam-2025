@@ -1,6 +1,7 @@
 import { Player } from "../entities/Player";
 import { InputSystem } from "../systems/InputSystem";
 import { MovementSystem } from "../systems/MovementSystem";
+import { EnemySystem } from "../systems/EnemySystem";
 import { SCREEN_CENTER_X, SCREEN_CENTER_Y } from "../config/GameConfig";
 
 export interface GameState {
@@ -15,6 +16,7 @@ export class GameManager {
     private player: Player;
     private inputSystem: InputSystem;
     private movementSystem: MovementSystem;
+    private enemySystem: EnemySystem;
     private gameState: GameState;
 
     constructor(scene: Phaser.Scene) {
@@ -31,6 +33,7 @@ export class GameManager {
         // Initialize systems
         this.inputSystem = new InputSystem(this.scene);
         this.movementSystem = new MovementSystem();
+        this.enemySystem = new EnemySystem(this.scene);
 
         // Create the player
         this.player = new Player(this.scene, {
@@ -42,6 +45,9 @@ export class GameManager {
 
         // Add player to movement system
         this.movementSystem.addEntity(this.player);
+
+        // Set player target for enemy system
+        this.enemySystem.setPlayer(this.player);
     }
 
     update(deltaTime: number): void {
@@ -56,6 +62,9 @@ export class GameManager {
 
         // Update all entities
         this.movementSystem.update(deltaTime);
+
+        // Update enemy system
+        this.enemySystem.update(deltaTime);
 
         // Check for siphon input
         if (this.inputSystem.isSiphonPressed()) {
@@ -93,5 +102,10 @@ export class GameManager {
 
     destroy(): void {
         this.movementSystem.clear();
+        this.enemySystem.clear();
+    }
+
+    getEnemySystem(): EnemySystem {
+        return this.enemySystem;
     }
 }

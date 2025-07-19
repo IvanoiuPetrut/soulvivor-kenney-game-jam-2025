@@ -38,6 +38,11 @@ export class Preloader extends Scene {
         this.load.image("logo", "logo.png");
         this.load.image("star", "star.png");
         this.load.image("player", "player.png");
+
+        // Load enemy sprites
+        this.load.image("enemy_mage", "enemies/mage.png");
+        this.load.image("enemy_crab", "enemies/crab.png");
+        this.load.image("enemy_ghost", "enemies/ghost.png");
     }
 
     create() {

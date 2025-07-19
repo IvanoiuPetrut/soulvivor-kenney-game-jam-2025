@@ -37,7 +37,7 @@ export interface EnemyConfig {
     y: number;
     speed: number;
     health: number;
-    type: "fodder" | "elite";
+    type: EnemyType;
 }
 
 export enum PowerType {
@@ -52,4 +52,27 @@ export interface Power {
     cooldown: number;
     lastUsed: number;
     damage: number;
+}
+
+// Enemy system types
+export enum EnemyType {
+    MAGE = "mage",
+    CRAB = "crab",
+    GHOST = "ghost",
+}
+
+export interface EnemyStats {
+    health: number;
+    speed: number;
+    damage: number;
+    attackRange: number;
+    attackCooldown: number;
+    points: number; // XP points awarded on death
+}
+
+export interface EnemyBehavior {
+    canPassThroughWalls: boolean;
+    hasRangedAttack: boolean;
+    attackPattern: "melee" | "ranged" | "special";
+    aggroRange: number; // Distance at which enemy starts chasing player
 }
