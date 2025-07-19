@@ -1,36 +1,58 @@
-import { EventBus } from '../EventBus';
-import { Scene } from 'phaser';
+import { EventBus } from "../EventBus";
+import { Scene } from "phaser";
+import { GameManager } from "../managers/GameManager";
+import {
+    GAME_CONFIG,
+    SCREEN_CENTER_X,
+    SCREEN_CENTER_Y,
+} from "../config/GameConfig";
 
-export class Game extends Scene
-{
+export class Game extends Scene {
     camera: Phaser.Cameras.Scene2D.Camera;
     background: Phaser.GameObjects.Image;
-    gameText: Phaser.GameObjects.Text;
+    gameManager: GameManager;
 
-    constructor ()
-    {
-        super('Game');
+    constructor() {
+        super("Game");
     }
 
-    create ()
-    {
+    create() {
         this.camera = this.cameras.main;
-        this.camera.setBackgroundColor(0x00ff00);
+        this.camera.setBackgroundColor(0x1a1a2e);
 
-        this.background = this.add.image(512, 384, 'background');
-        this.background.setAlpha(0.5);
+        this.background = this.add.image(
+            SCREEN_CENTER_X,
+            SCREEN_CENTER_Y,
+            "background"
+        );
+        this.background.setAlpha(0.3);
+        // Scale background to fit new resolution
+        this.background.setDisplaySize(GAME_CONFIG.width, GAME_CONFIG.height);
 
-        this.gameText = this.add.text(512, 384, 'Make something fun!\nand share it with us:\nsupport@phaser.io', {
-            fontFamily: 'Arial Black', fontSize: 38, color: '#ffffff',
-            stroke: '#000000', strokeThickness: 8,
-            align: 'center'
-        }).setOrigin(0.5).setDepth(100);
+        // Enable physics
+        this.physics.world.setBounds(
+            0,
+            0,
+            GAME_CONFIG.width,
+            GAME_CONFIG.height
+        );
 
-        EventBus.emit('current-scene-ready', this);
+        // Initialize game manager
+        this.gameManager = new GameManager(this);
+        this.gameManager.initialize();
+
+        EventBus.emit("current-scene-ready", this);
     }
 
-    changeScene ()
-    {
-        this.scene.start('GameOver');
+    update(time: number, delta: number): void {
+        // Convert delta from milliseconds to seconds
+        const deltaTime = delta / 1000;
+
+        // Update game through manager
+        this.gameManager.update(deltaTime);
+    }
+
+    changeScene() {
+        this.scene.start("GameOver");
     }
 }
