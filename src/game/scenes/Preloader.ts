@@ -65,6 +65,11 @@ export class Preloader extends Scene {
         this.load.image("enemy_crab", "enemies/crab.png");
         this.load.image("enemy_ghost", "enemies/ghost.png");
 
+        // Load weapon sprites
+        this.load.image("crab_power", "weapons/crab_power.png");
+        this.load.image("ghost_power", "weapons/ghost_power.png");
+        this.load.image("wizard_power", "weapons/wizard_power.png");
+
         // Load tilemap
         this.load.tilemapTiledJSON("map", "map/map.json");
         this.load.image("tiles", "map/tilemap.png");

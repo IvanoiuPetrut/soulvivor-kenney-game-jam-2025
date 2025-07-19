@@ -3,10 +3,12 @@ import { InputSystem } from "../systems/InputSystem";
 import { MovementSystem } from "../systems/MovementSystem";
 import { EnemySystem } from "../systems/EnemySystem";
 import { UISystem } from "../systems/UISystem";
+import { WeaponSystem } from "../systems/WeaponSystem";
 import { SCREEN_CENTER_X, SCREEN_CENTER_Y } from "../config/GameConfig";
 import { Game } from "../scenes/Game";
 import { EnemyType } from "../types/GameTypes";
 import { GAME_CONFIG } from "../config/GameConfig";
+import { PowerType } from "../types/GameTypes";
 
 export interface GameState {
     isPlaying: boolean;
@@ -22,7 +24,10 @@ export class GameManager {
     private movementSystem: MovementSystem;
     private enemySystem: EnemySystem;
     private uiSystem: UISystem;
+    private weaponSystem: WeaponSystem;
     private gameState: GameState;
+    private lastSiphonTime: number = 0;
+    private siphonCooldown: number = 500; // 0.5 second cooldown
 
     constructor(scene: Phaser.Scene) {
         this.scene = scene;
@@ -57,6 +62,9 @@ export class GameManager {
             health: 100,
         });
 
+        // Initialize weapon system
+        this.weaponSystem = new WeaponSystem(this.scene, this.player);
+
         // Add player to movement system
         this.movementSystem.addEntity(this.player);
 
@@ -88,12 +96,16 @@ export class GameManager {
         // Update enemy system
         this.enemySystem.update(deltaTime);
 
+        // Update weapon system with current enemies
+        const enemies = this.enemySystem.getEnemies();
+        this.weaponSystem.update(deltaTime, enemies);
+
         // Update UI with current game state
         this.uiSystem.update(this.gameState, this.player.health);
 
-        // Check for siphon input
-        if (this.inputSystem.isSiphonPressed()) {
-            this.handleSiphonAttempt();
+        // Check for power stealing (siphon input)
+        if (this.inputSystem.isSiphonPressed() && this.canSiphon()) {
+            this.handlePowerSteal();
         }
 
         // Check if player is alive
@@ -121,6 +133,83 @@ export class GameManager {
         //         );
         //     }
         // );
+    }
+
+    private canSiphon(): boolean {
+        const currentTime = this.scene.time.now;
+        return currentTime - this.lastSiphonTime >= this.siphonCooldown;
+    }
+
+    private handlePowerSteal(): void {
+        const enemies = this.enemySystem.getEnemies();
+        const siphonRange = 60; // 60 pixel range for power stealing
+
+        // Find nearest enemy within siphon range
+        let nearestEnemy = null;
+        let nearestDistance = siphonRange;
+
+        enemies.forEach((enemy) => {
+            if (!enemy.sprite.active) return;
+
+            const dx = enemy.sprite.x - this.player.sprite.x;
+            const dy = enemy.sprite.y - this.player.sprite.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+
+            if (distance < nearestDistance) {
+                nearestEnemy = enemy;
+                nearestDistance = distance;
+            }
+        });
+
+        if (nearestEnemy) {
+            this.stealPowerFromEnemy(nearestEnemy);
+            this.lastSiphonTime = this.scene.time.now;
+        }
+    }
+
+    private stealPowerFromEnemy(enemy: any): void {
+        // Determine power type based on enemy type
+        let powerType: PowerType = PowerType.NONE;
+
+        switch (enemy.type) {
+            case EnemyType.CRAB:
+                powerType = PowerType.CRAB_SWORD;
+                break;
+            case EnemyType.GHOST:
+                powerType = PowerType.GHOST_DAGGERS;
+                break;
+            case EnemyType.MAGE:
+                powerType = PowerType.MAGE_PROJECTILE;
+                break;
+        }
+
+        // Set the new power
+        this.weaponSystem.setPower(powerType);
+
+        // Kill the enemy (they get absorbed)
+        enemy.takeDamage(1000); // Instant kill
+
+        // Visual effect for power stealing
+        this.scene.tweens.add({
+            targets: enemy.sprite,
+            scaleX: 0,
+            scaleY: 0,
+            alpha: 0,
+            duration: 300,
+            ease: "Power2.easeIn",
+        });
+
+        // Player power absorption effect
+        this.scene.tweens.add({
+            targets: this.player.sprite,
+            scaleX: GAME_CONFIG.spriteScale * 1.2,
+            scaleY: GAME_CONFIG.spriteScale * 1.2,
+            duration: 200,
+            ease: "Back.easeOut",
+            yoyo: true,
+        });
+
+        console.log(`Power stolen: ${powerType}`);
     }
 
     private handleSiphonAttempt(): void {
@@ -161,6 +250,7 @@ export class GameManager {
     destroy(): void {
         this.movementSystem.clear();
         this.enemySystem.clear();
+        this.weaponSystem.destroy();
         this.uiSystem.destroy();
     }
 

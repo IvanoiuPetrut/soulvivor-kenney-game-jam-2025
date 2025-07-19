@@ -42,9 +42,9 @@ export interface EnemyConfig {
 
 export enum PowerType {
     NONE = "none",
-    HOMING_SPIRIT = "homing_spirit",
-    REVOLVING_SCYTHES = "revolving_scythes",
-    CHAIN_LIGHTNING = "chain_lightning",
+    CRAB_SWORD = "crab_sword", // Revolving sword around player
+    GHOST_DAGGERS = "ghost_daggers", // Short range cone attack
+    MAGE_PROJECTILE = "mage_projectile", // Long range single projectile
 }
 
 export interface Power {
