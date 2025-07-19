@@ -127,6 +127,10 @@ export class EnemySystem {
         }
 
         this.enemies.push(enemy);
+
+        // Emit event for collision setup
+        this.scene.events.emit("enemySpawned", enemy.sprite, enemy.type);
+
         console.log(`Spawned ${type} at (${spawnPos.x}, ${spawnPos.y})`);
     }
 

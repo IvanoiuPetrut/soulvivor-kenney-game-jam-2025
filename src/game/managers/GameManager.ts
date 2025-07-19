@@ -4,6 +4,8 @@ import { MovementSystem } from "../systems/MovementSystem";
 import { EnemySystem } from "../systems/EnemySystem";
 import { UISystem } from "../systems/UISystem";
 import { SCREEN_CENTER_X, SCREEN_CENTER_Y } from "../config/GameConfig";
+import { Game } from "../scenes/Game";
+import { EnemyType } from "../types/GameTypes";
 
 export interface GameState {
     isPlaying: boolean;
@@ -97,6 +99,20 @@ export class GameManager {
             "enemyDefeated",
             (points: number, enemyType: string) => {
                 this.addScore(points);
+            }
+        );
+
+        // Listen for enemy spawns to set up collision detection
+        this.scene.events.on(
+            "enemySpawned",
+            (enemySprite: Phaser.GameObjects.Sprite, enemyType: EnemyType) => {
+                // Set up collision detection if this is a Game scene
+                if (this.scene instanceof Game) {
+                    // Only set up collision for enemies that can't pass through walls
+                    if (enemyType !== EnemyType.GHOST) {
+                        this.scene.setupEnemyCollision(enemySprite);
+                    }
+                }
             }
         );
     }

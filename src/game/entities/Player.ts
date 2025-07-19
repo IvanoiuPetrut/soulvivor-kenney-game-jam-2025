@@ -55,33 +55,20 @@ export class Player implements GameEntity {
     }
 
     update(deltaTime: number): void {
-        // Update position based on velocity
-        this.sprite.x += this.velocity.x * deltaTime;
-        this.sprite.y += this.velocity.y * deltaTime;
-
-        // Update position tracking
+        // Update position tracking from physics body (physics handles the actual movement)
         this.position.x = this.sprite.x;
         this.position.y = this.sprite.y;
-
-        // Remove world bounds clamping for infinite movement
-        // const spriteHalfSize =
-        //     (GAME_CONFIG.baseSpriteSize * GAME_CONFIG.spriteScale) / 2;
-        // this.sprite.x = Phaser.Math.Clamp(
-        //     this.sprite.x,
-        //     spriteHalfSize,
-        //     GAME_CONFIG.width - spriteHalfSize
-        // );
-        // this.sprite.y = Phaser.Math.Clamp(
-        //     this.sprite.y,
-        //     spriteHalfSize,
-        //     GAME_CONFIG.height - spriteHalfSize
-        // );
 
         // Update movement state for animations
         this.updateMovementState();
     }
 
     move(direction: { x: number; y: number }): void {
+        // Set physics body velocity instead of internal velocity
+        const body = this.sprite.body as Phaser.Physics.Arcade.Body;
+        body.setVelocity(direction.x * this.speed, direction.y * this.speed);
+
+        // Update internal velocity tracking for consistency
         this.velocity.x = direction.x * this.speed;
         this.velocity.y = direction.y * this.speed;
 

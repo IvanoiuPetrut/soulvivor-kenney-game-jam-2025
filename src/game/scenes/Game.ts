@@ -11,6 +11,10 @@ export class Game extends Scene {
     camera: Phaser.Cameras.Scene2D.Camera;
     background: Phaser.GameObjects.Image;
     gameManager: GameManager;
+    // Store collision layers for enemy collision setup
+    private walks: Phaser.Tilemaps.TilemapLayer | null = null;
+    private buildings: Phaser.Tilemaps.TilemapLayer | null = null;
+    private objects: Phaser.Tilemaps.TilemapLayer | null = null;
 
     constructor() {
         super("Game");
@@ -35,14 +39,31 @@ export class Game extends Scene {
 
         //test tileset image
 
+        let walks, buildings, objects;
         if (tileset) {
             map.createLayer("Ground", tileset);
             map.createLayer("GroundDetails", tileset);
             map.createLayer("Rails", tileset);
             map.createLayer("Shadows", tileset);
-            map.createLayer("Walks", tileset);
-            map.createLayer("Buildings", tileset);
-            map.createLayer("Objects", tileset);
+            walks = map.createLayer("Walks", tileset);
+            buildings = map.createLayer("Buildings", tileset);
+            objects = map.createLayer("Objects", tileset);
+
+            // Store layers for enemy collision setup
+            this.walks = walks;
+            this.buildings = buildings;
+            this.objects = objects;
+
+            walks?.setCollisionByProperty({ collides: true });
+            buildings?.setCollisionByProperty({ collides: true });
+            objects?.setCollisionByProperty({ collides: true });
+
+            const debugGraphics = this.add.graphics().setAlpha(0.5);
+            walks?.renderDebug(debugGraphics, {
+                tileColor: null,
+                collidingTileColor: new Phaser.Display.Color(255, 0, 0, 255),
+                faceColor: new Phaser.Display.Color(40, 39, 37, 255),
+            });
         }
 
         // Enable physics (no bounds - free movement)
@@ -58,6 +79,13 @@ export class Game extends Scene {
         this.camera.setLerp(0.1, 0.1); // Smooth camera movement
         this.camera.setDeadzone(50, 50); // Small deadzone for smoother following
 
+        // collision for player
+        if (walks && buildings && objects) {
+            this.physics.add.collider(player.sprite, walks);
+            this.physics.add.collider(player.sprite, buildings);
+            this.physics.add.collider(player.sprite, objects);
+        }
+
         EventBus.emit("current-scene-ready", this);
     }
 
@@ -71,5 +99,18 @@ export class Game extends Scene {
 
     changeScene() {
         this.scene.start("GameOver");
+    }
+
+    // Method to set up collision detection for enemies
+    setupEnemyCollision(enemySprite: Phaser.GameObjects.Sprite): void {
+        if (this.walks) {
+            this.physics.add.collider(enemySprite, this.walks);
+        }
+        if (this.buildings) {
+            this.physics.add.collider(enemySprite, this.buildings);
+        }
+        if (this.objects) {
+            this.physics.add.collider(enemySprite, this.objects);
+        }
     }
 }

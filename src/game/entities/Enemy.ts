@@ -62,29 +62,9 @@ export abstract class Enemy implements GameEntity {
         // Update AI behavior
         this.updateAI(deltaTime);
 
-        // Update position based on velocity
-        this.sprite.x += this.velocity.x * deltaTime;
-        this.sprite.y += this.velocity.y * deltaTime;
-
-        // Update position tracking
+        // Update position tracking from physics body (physics handles the actual movement)
         this.position.x = this.sprite.x;
         this.position.y = this.sprite.y;
-
-        // Remove world bounds clamping for infinite movement
-        // if (!this.behavior.canPassThroughWalls) {
-        //     const spriteHalfSize =
-        //         (GAME_CONFIG.baseSpriteSize * GAME_CONFIG.spriteScale) / 2;
-        //     this.sprite.x = Phaser.Math.Clamp(
-        //         this.sprite.x,
-        //         spriteHalfSize,
-        //         GAME_CONFIG.width - spriteHalfSize
-        //     );
-        //     this.sprite.y = Phaser.Math.Clamp(
-        //         this.sprite.y,
-        //         spriteHalfSize,
-        //         GAME_CONFIG.height - spriteHalfSize
-        //     );
-        // }
 
         // Update specific enemy behavior
         this.updateBehavior(deltaTime);
@@ -106,9 +86,17 @@ export abstract class Enemy implements GameEntity {
         const distance = Math.sqrt(dx * dx + dy * dy);
 
         if (distance > 0) {
-            // Normalize direction and apply speed
-            this.velocity.x = (dx / distance) * this.stats.speed;
-            this.velocity.y = (dy / distance) * this.stats.speed;
+            // Calculate velocity
+            const velocityX = (dx / distance) * this.stats.speed;
+            const velocityY = (dy / distance) * this.stats.speed;
+
+            // Set physics body velocity
+            const body = this.sprite.body as Phaser.Physics.Arcade.Body;
+            body.setVelocity(velocityX, velocityY);
+
+            // Update internal velocity tracking for consistency
+            this.velocity.x = velocityX;
+            this.velocity.y = velocityY;
 
             // Handle sprite flipping like player
             if (dx > 0) {
@@ -217,6 +205,11 @@ export class MageEnemy extends Enemy {
         // Always pursue since aggro range is infinite
         // If in attack range, stop moving and attack
         if (this.isInAttackRange() && this.canAttack()) {
+            // Stop movement using physics body
+            const body = this.sprite.body as Phaser.Physics.Arcade.Body;
+            body.setVelocity(0, 0);
+
+            // Update internal velocity tracking for consistency
             this.velocity.x = 0;
             this.velocity.y = 0;
             this.attack();
