@@ -2,6 +2,7 @@ import { EventBus } from "../EventBus";
 import { Scene } from "phaser";
 import { GameManager } from "../managers/GameManager";
 import { AudioManager } from "../managers/AudioManager";
+import { ParticleManager } from "../managers/ParticleManager";
 import {
     GAME_CONFIG,
     SCREEN_CENTER_X,
@@ -13,6 +14,7 @@ export class Game extends Scene {
     background: Phaser.GameObjects.Image;
     gameManager: GameManager;
     audioManager: AudioManager;
+    particleManager: ParticleManager;
     // Store collision layers for enemy collision setup
     private walks: Phaser.Tilemaps.TilemapLayer | null = null;
     private buildings: Phaser.Tilemaps.TilemapLayer | null = null;
@@ -60,6 +62,15 @@ export class Game extends Scene {
             buildings?.setScale(GAME_CONFIG.spriteScale);
             objects?.setScale(GAME_CONFIG.spriteScale);
 
+            // Set explicit depths for tilemap layers
+            ground?.setDepth(1);
+            groundDetails?.setDepth(2);
+            rails?.setDepth(3);
+            shadows?.setDepth(4);
+            walks?.setDepth(10);
+            buildings?.setDepth(15);
+            objects?.setDepth(20);
+
             // Store layers for enemy collision setup
             this.walks = walks;
             this.buildings = buildings;
@@ -84,8 +95,15 @@ export class Game extends Scene {
         this.audioManager = new AudioManager(this);
         this.audioManager.startBackgroundMusic();
 
+        // Initialize particle manager
+        this.particleManager = new ParticleManager(this);
+
         // Initialize game manager
-        this.gameManager = new GameManager(this, this.audioManager);
+        this.gameManager = new GameManager(
+            this,
+            this.audioManager,
+            this.particleManager
+        );
         this.gameManager.initialize();
 
         // Set up camera to follow the player
@@ -108,6 +126,9 @@ export class Game extends Scene {
         // Convert delta from milliseconds to seconds
         const deltaTime = delta / 1000;
 
+        // Update particle system
+        this.particleManager.update(deltaTime);
+
         // Update game through manager
         this.gameManager.update(deltaTime);
     }
@@ -115,6 +136,10 @@ export class Game extends Scene {
     changeScene() {
         // Stop background music when game ends
         this.audioManager.stopBackgroundMusic();
+
+        // Clean up particles
+        this.particleManager.destroy();
+
         this.scene.start("GameOver");
     }
 

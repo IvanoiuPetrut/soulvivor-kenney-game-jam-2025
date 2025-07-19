@@ -3,11 +3,13 @@ import { Player } from "../entities/Player";
 import { Enemy } from "../entities/Enemy";
 import { GAME_CONFIG } from "../config/GameConfig";
 import { AudioManager } from "../managers/AudioManager";
+import { ParticleManager } from "../managers/ParticleManager";
 
 export class WeaponSystem {
     private scene: Phaser.Scene;
     private player: Player;
     private audioManager: AudioManager;
+    private particleManager: ParticleManager;
     private currentPower: PowerType = PowerType.NONE;
 
     // Crab Sword (revolving)
@@ -28,11 +30,13 @@ export class WeaponSystem {
     constructor(
         scene: Phaser.Scene,
         player: Player,
-        audioManager: AudioManager
+        audioManager: AudioManager,
+        particleManager: ParticleManager
     ) {
         this.scene = scene;
         this.player = player;
         this.audioManager = audioManager;
+        this.particleManager = particleManager;
     }
 
     setPower(powerType: PowerType): void {
@@ -113,6 +117,12 @@ export class WeaponSystem {
                 // Play hit sound
                 this.audioManager.playHit();
 
+                // Create hit particles
+                this.particleManager.createEnemyHitEffect(
+                    enemy.sprite.x,
+                    enemy.sprite.y
+                );
+
                 // Visual effect
                 this.scene.tweens.add({
                     targets: enemy.sprite,
@@ -154,6 +164,10 @@ export class WeaponSystem {
                 if (distance < 20) {
                     enemy.takeDamage(20); // Dagger damage
                     this.audioManager.playHit();
+                    this.particleManager.createEnemyHitEffect(
+                        enemy.sprite.x,
+                        enemy.sprite.y
+                    );
                     dagger.destroy();
                     hit = true;
                 }
@@ -191,6 +205,10 @@ export class WeaponSystem {
                 if (distance < 25) {
                     enemy.takeDamage(40); // High mage damage
                     this.audioManager.playHit();
+                    this.particleManager.createEnemyHitEffect(
+                        enemy.sprite.x,
+                        enemy.sprite.y
+                    );
                     projectile.destroy();
                     hit = true;
                 }

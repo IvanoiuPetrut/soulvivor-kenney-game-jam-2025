@@ -8,6 +8,7 @@ import {
 } from "../types/GameTypes";
 import { GAME_CONFIG } from "../config/GameConfig";
 import { AudioManager } from "../managers/AudioManager";
+import { ParticleManager } from "../managers/ParticleManager";
 
 export class Player implements GameEntity {
     sprite: Phaser.GameObjects.Sprite;
@@ -19,12 +20,14 @@ export class Player implements GameEntity {
     scene: Phaser.Scene;
     currentPower: Power;
     private audioManager: AudioManager | null = null;
+    private particleManager: ParticleManager | null = null;
 
     // Health bar components
     private healthBarBackground: Phaser.GameObjects.Rectangle;
     private healthBarFill: Phaser.GameObjects.Rectangle;
     private healthBarWidth: number = 40;
     private healthBarHeight: number = 6;
+    private healthBarOffsetY: number = 35; // Single source of truth for health bar offset
 
     // Animation and visual properties
     private idleTween: Phaser.Tweens.Tween | null = null;
@@ -66,12 +69,10 @@ export class Player implements GameEntity {
     }
 
     private createHealthBar(): void {
-        const offsetY = 25; // Distance below player sprite
-
         // Create health bar background (dark red)
         this.healthBarBackground = this.scene.add.rectangle(
             this.sprite.x,
-            this.sprite.y + offsetY,
+            this.sprite.y + this.healthBarOffsetY,
             this.healthBarWidth,
             this.healthBarHeight,
             0x660000
@@ -81,7 +82,7 @@ export class Player implements GameEntity {
         // Create health bar fill (bright red)
         this.healthBarFill = this.scene.add.rectangle(
             this.sprite.x,
-            this.sprite.y + offsetY,
+            this.sprite.y + this.healthBarOffsetY,
             this.healthBarWidth,
             this.healthBarHeight,
             0xff0000
@@ -99,17 +100,26 @@ export class Player implements GameEntity {
 
         // Update movement state for animations
         this.updateMovementState();
+
+        // Update particle positions if moving
+        if (this.isMoving && this.particleManager) {
+            this.particleManager.startMovementParticles(
+                this.sprite.x,
+                this.sprite.y
+            );
+        }
     }
 
     private updateHealthBar(): void {
-        const offsetY = 25;
-
         // Update health bar positions to follow player
         this.healthBarBackground.setPosition(
             this.sprite.x,
-            this.sprite.y + offsetY
+            this.sprite.y + this.healthBarOffsetY
         );
-        this.healthBarFill.setPosition(this.sprite.x, this.sprite.y + offsetY);
+        this.healthBarFill.setPosition(
+            this.sprite.x,
+            this.sprite.y + this.healthBarOffsetY
+        );
 
         // Update health bar fill width based on current health
         const healthPercentage = this.health / this.maxHealth;
@@ -148,9 +158,20 @@ export class Player implements GameEntity {
             if (this.isMoving) {
                 this.stopIdleAnimation();
                 this.startMovementAnimation();
+                // Start movement particles
+                if (this.particleManager) {
+                    this.particleManager.startMovementParticles(
+                        this.sprite.x,
+                        this.sprite.y
+                    );
+                }
             } else {
                 this.stopMovementAnimation();
                 this.startIdleAnimation();
+                // Stop movement particles
+                if (this.particleManager) {
+                    this.particleManager.stopMovementParticles();
+                }
             }
         }
     }
@@ -235,12 +256,24 @@ export class Player implements GameEntity {
         this.audioManager = audioManager;
     }
 
+    setParticleManager(particleManager: ParticleManager): void {
+        this.particleManager = particleManager;
+    }
+
     takeDamage(amount: number): void {
         this.health = Math.max(0, this.health - amount);
 
         // Play hurt sound
         if (this.audioManager) {
             this.audioManager.playHurt();
+        }
+
+        // Create hit particles
+        if (this.particleManager) {
+            this.particleManager.createPlayerHitEffect(
+                this.sprite.x,
+                this.sprite.y
+            );
         }
 
         // Enhanced visual feedback for taking damage

@@ -5,6 +5,7 @@ import { EnemySystem } from "../systems/EnemySystem";
 import { UISystem } from "../systems/UISystem";
 import { WeaponSystem } from "../systems/WeaponSystem";
 import { AudioManager } from "./AudioManager";
+import { ParticleManager } from "./ParticleManager";
 import { SCREEN_CENTER_X, SCREEN_CENTER_Y } from "../config/GameConfig";
 import { Game } from "../scenes/Game";
 import { EnemyType } from "../types/GameTypes";
@@ -27,13 +28,19 @@ export class GameManager {
     private uiSystem: UISystem;
     private weaponSystem: WeaponSystem;
     private audioManager: AudioManager;
+    private particleManager: ParticleManager;
     private gameState: GameState;
     private lastSiphonTime: number = 0;
     private siphonCooldown: number = 500; // 0.5 second cooldown
 
-    constructor(scene: Phaser.Scene, audioManager: AudioManager) {
+    constructor(
+        scene: Phaser.Scene,
+        audioManager: AudioManager,
+        particleManager: ParticleManager
+    ) {
         this.scene = scene;
         this.audioManager = audioManager;
+        this.particleManager = particleManager;
         this.gameState = {
             isPlaying: true,
             score: 0,
@@ -68,11 +75,15 @@ export class GameManager {
         // Set audio manager on player
         this.player.setAudioManager(this.audioManager);
 
+        // Set particle manager on player
+        this.player.setParticleManager(this.particleManager);
+
         // Initialize weapon system
         this.weaponSystem = new WeaponSystem(
             this.scene,
             this.player,
-            this.audioManager
+            this.audioManager,
+            this.particleManager
         );
 
         // Add player to movement system
@@ -80,6 +91,9 @@ export class GameManager {
 
         // Set player target for enemy system
         this.enemySystem.setPlayer(this.player);
+
+        // Set particle manager for enemy system
+        this.enemySystem.setParticleManager(this.particleManager);
 
         // Set up event listeners
         this.setupEventListeners();
@@ -198,6 +212,12 @@ export class GameManager {
 
         // Play power-up sound
         this.audioManager.playPowerUp();
+
+        // Create power-up particles
+        this.particleManager.createPowerUpEffect(
+            enemy.sprite.x,
+            enemy.sprite.y
+        );
 
         // Kill the enemy (they get absorbed)
         enemy.takeDamage(1000); // Instant kill

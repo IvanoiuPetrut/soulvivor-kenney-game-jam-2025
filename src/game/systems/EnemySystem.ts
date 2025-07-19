@@ -2,6 +2,7 @@ import { Enemy, MageEnemy, CrabEnemy, GhostEnemy } from "../entities/Enemy";
 import { EnemyType, EnemyConfig } from "../types/GameTypes";
 import { Player } from "../entities/Player";
 import { GAME_CONFIG } from "../config/GameConfig";
+import { ParticleManager } from "../managers/ParticleManager";
 
 export interface SpawnConfig {
     enemyType: EnemyType;
@@ -13,6 +14,7 @@ export class EnemySystem {
     private scene: Phaser.Scene;
     private enemies: Enemy[] = [];
     private player: Player | null = null;
+    private particleManager: ParticleManager | null = null;
     private spawnConfigs: SpawnConfig[] = [];
     private lastSpawnTimes: Map<EnemyType, number> = new Map();
 
@@ -63,6 +65,14 @@ export class EnemySystem {
         this.player = player;
         // Set target for all existing enemies
         this.enemies.forEach((enemy) => enemy.setTarget(player));
+    }
+
+    setParticleManager(particleManager: ParticleManager): void {
+        this.particleManager = particleManager;
+        // Set particle manager for all existing enemies
+        this.enemies.forEach((enemy) =>
+            enemy.setParticleManager(particleManager)
+        );
     }
 
     update(deltaTime: number): void {
@@ -144,6 +154,10 @@ export class EnemySystem {
 
         if (this.player) {
             enemy.setTarget(this.player);
+        }
+
+        if (this.particleManager) {
+            enemy.setParticleManager(this.particleManager);
         }
 
         this.enemies.push(enemy);

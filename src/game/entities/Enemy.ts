@@ -9,6 +9,7 @@ import {
 } from "../types/GameTypes";
 import { GAME_CONFIG } from "../config/GameConfig";
 import { Player } from "./Player";
+import { ParticleManager } from "../managers/ParticleManager";
 
 export abstract class Enemy implements GameEntity {
     sprite: Phaser.GameObjects.Sprite;
@@ -25,6 +26,7 @@ export abstract class Enemy implements GameEntity {
     protected target: Player | null = null;
     protected lastAttackTime: number = 0;
     protected isAlive: boolean = true;
+    protected particleManager: ParticleManager | null = null;
 
     constructor(
         scene: Phaser.Scene,
@@ -76,6 +78,10 @@ export abstract class Enemy implements GameEntity {
 
     setTarget(player: Player): void {
         this.target = player;
+    }
+
+    setParticleManager(particleManager: ParticleManager): void {
+        this.particleManager = particleManager;
     }
 
     protected moveTowardsTarget(): void {
@@ -138,6 +144,14 @@ export abstract class Enemy implements GameEntity {
 
     protected die(): void {
         this.isAlive = false;
+
+        // Create death particles
+        if (this.particleManager) {
+            this.particleManager.createEnemyDeathEffect(
+                this.sprite.x,
+                this.sprite.y
+            );
+        }
 
         // Death animation
         this.scene.tweens.add({
