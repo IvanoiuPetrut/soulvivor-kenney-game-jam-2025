@@ -4,8 +4,16 @@ import { GAME_CONFIG } from "../config/GameConfig";
 export class UISystem {
     private scene: Phaser.Scene;
     private timerText: Phaser.GameObjects.Text | null = null;
-    private healthText: Phaser.GameObjects.Text | null = null;
-    private scoreText: Phaser.GameObjects.Text | null = null;
+    // Removed healthText and scoreText since we now have visual health bar under player
+    // and XP bar at bottom
+
+    // XP bar components
+    private xpBarBackground: Phaser.GameObjects.Rectangle | null = null;
+    private xpBarFill: Phaser.GameObjects.Rectangle | null = null;
+    private xpBarWidth: number = 400;
+    private xpBarHeight: number = 12;
+    private currentXP: number = 45; // Demo value for visual testing
+    private maxXP: number = 100;
 
     constructor(scene: Phaser.Scene) {
         this.scene = scene;
@@ -13,43 +21,86 @@ export class UISystem {
     }
 
     private createUI(): void {
-        // Create survival timer (top center)
+        // Create survival timer that will stay at top of screen
         this.timerText = this.scene.add
-            .text(GAME_CONFIG.width / 2, 30, "00:00", {
+            .text(0, 0, "00:00", {
                 fontFamily: "Arial", // Fallback to Arial for now
                 fontSize: "24px",
                 color: "#ffffff",
                 stroke: "#000000",
                 strokeThickness: 2,
             })
-            .setOrigin(0.5, 0)
-            .setDepth(200);
+            .setOrigin(0.5, 0) // Center horizontally, top aligned
+            .setDepth(200)
+            .setScrollFactor(0); // Make timer ignore camera movement
 
-        // Create health display (top left)
-        this.healthText = this.scene.add
-            .text(20, 20, "Health: 100", {
-                fontFamily: "Arial",
-                fontSize: "18px",
-                color: "#ff4444",
-                stroke: "#000000",
-                strokeThickness: 2,
-            })
-            .setDepth(200);
+        // Create XP bar at bottom of screen
+        this.createXPBar();
 
-        // Create score display (top right)
-        this.scoreText = this.scene.add
-            .text(GAME_CONFIG.width - 20, 20, "Score: 0", {
-                fontFamily: "Arial",
-                fontSize: "18px",
-                color: "#44ff44",
-                stroke: "#000000",
-                strokeThickness: 2,
-            })
-            .setOrigin(1, 0)
-            .setDepth(200);
+        // Position timer initially
+        this.updateTimerPosition();
+    }
+
+    private createXPBar(): void {
+        const camera = this.scene.cameras.main;
+
+        // Create XP bar background (dark)
+        this.xpBarBackground = this.scene.add.rectangle(
+            0,
+            0,
+            this.xpBarWidth,
+            this.xpBarHeight,
+            0x333333
+        );
+        this.xpBarBackground.setDepth(200);
+        this.xpBarBackground.setScrollFactor(0); // Stick to screen
+
+        // Create XP bar fill (bright purple/blue)
+        this.xpBarFill = this.scene.add.rectangle(
+            0,
+            0,
+            this.xpBarWidth * (this.currentXP / this.maxXP),
+            this.xpBarHeight,
+            0x4a90e2
+        );
+        this.xpBarFill.setDepth(201);
+        this.xpBarFill.setScrollFactor(0); // Stick to screen
+        this.xpBarFill.setOrigin(0, 0.5); // Left-aligned fill
+
+        // Position XP bar initially
+        this.updateXPBarPosition();
+    }
+
+    private updateXPBarPosition(): void {
+        const camera = this.scene.cameras.main;
+        const bottomY = camera.y + camera.height - 30; // 30px from bottom
+        const centerX = camera.centerX;
+
+        if (this.xpBarBackground) {
+            this.xpBarBackground.setPosition(centerX, bottomY);
+        }
+
+        if (this.xpBarFill) {
+            // Position fill bar at left edge of background
+            const fillX = centerX - this.xpBarWidth / 2;
+            this.xpBarFill.setPosition(fillX, bottomY);
+        }
+    }
+
+    private updateTimerPosition(): void {
+        const camera = this.scene.cameras.main;
+
+        // Position timer at top center of camera view
+        if (this.timerText) {
+            this.timerText.setPosition(camera.centerX, camera.y + 30);
+        }
     }
 
     update(gameState: GameState, playerHealth: number): void {
+        // Update UI positions to follow camera
+        this.updateXPBarPosition();
+        this.updateTimerPosition();
+
         // Update survival timer
         if (this.timerText) {
             const minutes = Math.floor(gameState.timeElapsed / 60);
@@ -70,23 +121,10 @@ export class UISystem {
             }
         }
 
-        // Update health display
-        if (this.healthText) {
-            this.healthText.setText(`Health: ${playerHealth}`);
-
-            // Change color based on health
-            if (playerHealth > 70) {
-                this.healthText.setStyle({ color: "#44ff44" }); // Green
-            } else if (playerHealth > 30) {
-                this.healthText.setStyle({ color: "#ffaa00" }); // Orange
-            } else {
-                this.healthText.setStyle({ color: "#ff4444" }); // Red
-            }
-        }
-
-        // Update score display
-        if (this.scoreText) {
-            this.scoreText.setText(`Score: ${gameState.score}`);
+        // Update XP bar (using demo values for now - no logic implementation)
+        if (this.xpBarFill) {
+            const fillWidth = this.xpBarWidth * (this.currentXP / this.maxXP);
+            this.xpBarFill.setSize(fillWidth, this.xpBarHeight);
         }
     }
 
@@ -104,21 +142,22 @@ export class UISystem {
             this.timerText.setStyle(customFontStyle);
         }
 
-        if (this.healthText) {
-            this.healthText.setStyle({
-                ...customFontStyle,
-                fontSize: "18px",
-                color: "#ff4444",
-            });
-        }
+        // Health and Score text styles are no longer used, so no need to update them here.
+        // if (this.healthText) {
+        //     this.healthText.setStyle({
+        //         ...customFontStyle,
+        //         fontSize: "18px",
+        //         color: "#ff4444",
+        //     });
+        // }
 
-        if (this.scoreText) {
-            this.scoreText.setStyle({
-                ...customFontStyle,
-                fontSize: "18px",
-                color: "#44ff44",
-            });
-        }
+        // if (this.scoreText) {
+        //     this.scoreText.setStyle({
+        //         ...customFontStyle,
+        //         fontSize: "18px",
+        //         color: "#44ff44",
+        //     });
+        // }
     }
 
     showGameOver(finalTime: string, finalScore: number): void {
@@ -202,13 +241,14 @@ export class UISystem {
             this.timerText.destroy();
             this.timerText = null;
         }
-        if (this.healthText) {
-            this.healthText.destroy();
-            this.healthText = null;
+        // Removed healthText and scoreText destruction
+        if (this.xpBarBackground) {
+            this.xpBarBackground.destroy();
+            this.xpBarBackground = null;
         }
-        if (this.scoreText) {
-            this.scoreText.destroy();
-            this.scoreText = null;
+        if (this.xpBarFill) {
+            this.xpBarFill.destroy();
+            this.xpBarFill = null;
         }
     }
 }
