@@ -18,6 +18,12 @@ export class Player implements GameEntity {
     scene: Phaser.Scene;
     currentPower: Power;
 
+    // Health bar components
+    private healthBarBackground: Phaser.GameObjects.Rectangle;
+    private healthBarFill: Phaser.GameObjects.Rectangle;
+    private healthBarWidth: number = 40;
+    private healthBarHeight: number = 6;
+
     // Animation and visual properties
     private idleTween: Phaser.Tweens.Tween | null = null;
     private lastMovementDirection: { x: number; y: number } = { x: 0, y: 0 };
@@ -50,8 +56,35 @@ export class Player implements GameEntity {
         // Remove world bounds restriction for infinite movement
         // (this.sprite.body as Phaser.Physics.Arcade.Body).setCollideWorldBounds(true);
 
+        // Create health bar
+        this.createHealthBar();
+
         // Start idle animation
         this.startIdleAnimation();
+    }
+
+    private createHealthBar(): void {
+        const offsetY = 25; // Distance below player sprite
+
+        // Create health bar background (dark red)
+        this.healthBarBackground = this.scene.add.rectangle(
+            this.sprite.x,
+            this.sprite.y + offsetY,
+            this.healthBarWidth,
+            this.healthBarHeight,
+            0x660000
+        );
+        this.healthBarBackground.setDepth(90); // Above ground, below player
+
+        // Create health bar fill (bright red)
+        this.healthBarFill = this.scene.add.rectangle(
+            this.sprite.x,
+            this.sprite.y + offsetY,
+            this.healthBarWidth,
+            this.healthBarHeight,
+            0xff0000
+        );
+        this.healthBarFill.setDepth(91); // Above background
     }
 
     update(deltaTime: number): void {
@@ -59,8 +92,36 @@ export class Player implements GameEntity {
         this.position.x = this.sprite.x;
         this.position.y = this.sprite.y;
 
+        // Update health bar position
+        this.updateHealthBar();
+
         // Update movement state for animations
         this.updateMovementState();
+    }
+
+    private updateHealthBar(): void {
+        const offsetY = 25;
+
+        // Update health bar positions to follow player
+        this.healthBarBackground.setPosition(
+            this.sprite.x,
+            this.sprite.y + offsetY
+        );
+        this.healthBarFill.setPosition(this.sprite.x, this.sprite.y + offsetY);
+
+        // Update health bar fill width based on current health
+        const healthPercentage = this.health / this.maxHealth;
+        const fillWidth = this.healthBarWidth * healthPercentage;
+        this.healthBarFill.setSize(fillWidth, this.healthBarHeight);
+
+        // Change health bar color based on health percentage
+        if (healthPercentage > 0.6) {
+            this.healthBarFill.setFillStyle(0x00ff00); // Green when healthy
+        } else if (healthPercentage > 0.3) {
+            this.healthBarFill.setFillStyle(0xffaa00); // Orange when moderate
+        } else {
+            this.healthBarFill.setFillStyle(0xff0000); // Red when critical
+        }
     }
 
     move(direction: { x: number; y: number }): void {
@@ -172,24 +233,63 @@ export class Player implements GameEntity {
         this.health = Math.max(0, this.health - amount);
 
         // Enhanced visual feedback for taking damage
-        this.sprite.setTint(0xff0000);
 
-        // Add a damage shake effect
+        // 1. Red tint effect on player sprite
+        this.sprite.setTint(0xff4444);
+
+        // 2. Sprite wobble/shake effect
+        const originalX = this.sprite.x;
+        const originalY = this.sprite.y;
+
         this.scene.tweens.add({
             targets: this.sprite,
-            x: this.sprite.x + 5,
-            duration: 50,
+            x: originalX + 8,
+            y: originalY + 4,
+            duration: 60,
             ease: "Power2",
             yoyo: true,
-            repeat: 3,
+            repeat: 2,
             onComplete: () => {
-                this.sprite.x = this.position.x; // Reset position
+                // Reset position and tint
+                this.sprite.setPosition(originalX, originalY);
+                this.sprite.setTint(0xffffff);
             },
         });
 
-        this.scene.time.delayedCall(150, () => {
-            this.sprite.setTint(0xffffff);
+        // 3. Health bar shake effect
+        this.scene.tweens.add({
+            targets: [this.healthBarBackground, this.healthBarFill],
+            scaleY: 1.5,
+            duration: 100,
+            ease: "Back.easeOut",
+            yoyo: true,
         });
+
+        // 4. Health bar flash effect
+        this.scene.tweens.add({
+            targets: this.healthBarFill,
+            alpha: 0.3,
+            duration: 150,
+            ease: "Sine.easeInOut",
+            yoyo: true,
+            repeat: 1,
+        });
+
+        // 5. Screen shake effect (slight)
+        this.scene.cameras.main.shake(200, 0.02);
+
+        // 6. Health bar color pulse effect for critical health
+        const healthPercentage = this.health / this.maxHealth;
+        if (healthPercentage <= 0.3 && healthPercentage > 0) {
+            this.scene.tweens.add({
+                targets: this.healthBarFill,
+                scaleX: 1.1,
+                duration: 300,
+                ease: "Sine.easeInOut",
+                yoyo: true,
+                repeat: 2,
+            });
+        }
 
         if (this.health <= 0) {
             this.destroy();
@@ -267,6 +367,15 @@ export class Player implements GameEntity {
         // Clean up animations
         this.stopIdleAnimation();
         this.scene.tweens.killTweensOf(this.sprite);
+
+        // Clean up health bar
+        if (this.healthBarBackground) {
+            this.healthBarBackground.destroy();
+        }
+        if (this.healthBarFill) {
+            this.healthBarFill.destroy();
+        }
+
         this.sprite.destroy();
     }
 }

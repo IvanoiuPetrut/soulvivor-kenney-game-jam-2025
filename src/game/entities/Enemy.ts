@@ -220,11 +220,44 @@ export class MageEnemy extends Enemy {
     }
 
     protected updateBehavior(deltaTime: number): void {
-        // Update projectiles
-        this.projectiles.forEach((projectile, index) => {
+        // Update projectiles and check for player collision
+        this.projectiles = this.projectiles.filter((projectile) => {
             if (!projectile.active) {
-                this.projectiles.splice(index, 1);
+                return false; // Remove inactive projectiles
             }
+
+            // Check collision with player using distance
+            if (this.target) {
+                const dx = projectile.x - this.target.position.x;
+                const dy = projectile.y - this.target.position.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+
+                // If projectile is close enough to player (collision)
+                if (distance < 20) {
+                    // 20 pixel collision radius
+                    // Deal damage to player
+                    this.target.takeDamage(this.stats.damage);
+
+                    // Create hit effect
+                    this.scene.tweens.add({
+                        targets: projectile,
+                        scaleX: 2,
+                        scaleY: 2,
+                        alpha: 0,
+                        duration: 200,
+                        ease: "Power2",
+                        onComplete: () => {
+                            if (projectile && projectile.active) {
+                                projectile.destroy();
+                            }
+                        },
+                    });
+
+                    return false; // Remove projectile from array
+                }
+            }
+
+            return true; // Keep projectile
         });
     }
 
