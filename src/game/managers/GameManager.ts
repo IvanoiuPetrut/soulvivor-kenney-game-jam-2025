@@ -4,6 +4,7 @@ import { MovementSystem } from "../systems/MovementSystem";
 import { EnemySystem } from "../systems/EnemySystem";
 import { UISystem } from "../systems/UISystem";
 import { WeaponSystem } from "../systems/WeaponSystem";
+import { AudioManager } from "./AudioManager";
 import { SCREEN_CENTER_X, SCREEN_CENTER_Y } from "../config/GameConfig";
 import { Game } from "../scenes/Game";
 import { EnemyType } from "../types/GameTypes";
@@ -25,12 +26,14 @@ export class GameManager {
     private enemySystem: EnemySystem;
     private uiSystem: UISystem;
     private weaponSystem: WeaponSystem;
+    private audioManager: AudioManager;
     private gameState: GameState;
     private lastSiphonTime: number = 0;
     private siphonCooldown: number = 500; // 0.5 second cooldown
 
-    constructor(scene: Phaser.Scene) {
+    constructor(scene: Phaser.Scene, audioManager: AudioManager) {
         this.scene = scene;
+        this.audioManager = audioManager;
         this.gameState = {
             isPlaying: true,
             score: 0,
@@ -62,8 +65,15 @@ export class GameManager {
             health: 100,
         });
 
+        // Set audio manager on player
+        this.player.setAudioManager(this.audioManager);
+
         // Initialize weapon system
-        this.weaponSystem = new WeaponSystem(this.scene, this.player);
+        this.weaponSystem = new WeaponSystem(
+            this.scene,
+            this.player,
+            this.audioManager
+        );
 
         // Add player to movement system
         this.movementSystem.addEntity(this.player);
@@ -186,6 +196,9 @@ export class GameManager {
         // Set the new power
         this.weaponSystem.setPower(powerType);
 
+        // Play power-up sound
+        this.audioManager.playPowerUp();
+
         // Kill the enemy (they get absorbed)
         enemy.takeDamage(1000); // Instant kill
 
@@ -219,6 +232,9 @@ export class GameManager {
 
     private gameOver(): void {
         this.gameState.isPlaying = false;
+
+        // Stop background music
+        this.audioManager.stopBackgroundMusic();
 
         // Format final time for display
         const minutes = Math.floor(this.gameState.timeElapsed / 60);

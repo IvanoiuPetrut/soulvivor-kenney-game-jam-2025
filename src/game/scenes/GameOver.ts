@@ -1,17 +1,22 @@
 import { EventBus } from "../EventBus";
 import { Scene } from "phaser";
 import { SCREEN_CENTER_X, SCREEN_CENTER_Y } from "../config/GameConfig";
+import { AudioManager } from "../managers/AudioManager";
 
 export class GameOver extends Scene {
     camera: Phaser.Cameras.Scene2D.Camera;
     background: Phaser.GameObjects.Image;
     gameOverText: Phaser.GameObjects.Text;
+    audioManager: AudioManager;
 
     constructor() {
         super("GameOver");
     }
 
     create() {
+        // Initialize audio manager
+        this.audioManager = new AudioManager(this);
+
         this.camera = this.cameras.main;
         this.camera.setBackgroundColor(0xff0000);
 
@@ -38,6 +43,8 @@ export class GameOver extends Scene {
     }
 
     changeScene() {
+        // Play select sound
+        this.audioManager.playSelect();
         this.scene.start("MainMenu");
     }
 }

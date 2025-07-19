@@ -7,6 +7,7 @@ import {
     PowerType,
 } from "../types/GameTypes";
 import { GAME_CONFIG } from "../config/GameConfig";
+import { AudioManager } from "../managers/AudioManager";
 
 export class Player implements GameEntity {
     sprite: Phaser.GameObjects.Sprite;
@@ -17,6 +18,7 @@ export class Player implements GameEntity {
     speed: number;
     scene: Phaser.Scene;
     currentPower: Power;
+    private audioManager: AudioManager | null = null;
 
     // Health bar components
     private healthBarBackground: Phaser.GameObjects.Rectangle;
@@ -229,8 +231,17 @@ export class Player implements GameEntity {
         });
     }
 
+    setAudioManager(audioManager: AudioManager): void {
+        this.audioManager = audioManager;
+    }
+
     takeDamage(amount: number): void {
         this.health = Math.max(0, this.health - amount);
+
+        // Play hurt sound
+        if (this.audioManager) {
+            this.audioManager.playHurt();
+        }
 
         // Enhanced visual feedback for taking damage
 
@@ -347,14 +358,14 @@ export class Player implements GameEntity {
 
         // Power usage will be implemented when we add specific powers
         switch (this.currentPower.type) {
-            case PowerType.HOMING_SPIRIT:
-                // TODO: Implement homing spirit
+            case PowerType.CRAB_SWORD:
+                // TODO: Implement crab sword
                 break;
-            case PowerType.REVOLVING_SCYTHES:
-                // TODO: Implement revolving scythes
+            case PowerType.GHOST_DAGGERS:
+                // TODO: Implement ghost daggers
                 break;
-            case PowerType.CHAIN_LIGHTNING:
-                // TODO: Implement chain lightning
+            case PowerType.MAGE_PROJECTILE:
+                // TODO: Implement mage projectile
                 break;
         }
     }

@@ -1,18 +1,23 @@
 import { GameObjects, Scene } from "phaser";
 import { EventBus } from "../EventBus";
 import { SCREEN_CENTER_X, SCREEN_CENTER_Y } from "../config/GameConfig";
+import { AudioManager } from "../managers/AudioManager";
 
 export class MainMenu extends Scene {
     background: GameObjects.Image;
     logo: GameObjects.Image;
     title: GameObjects.Text;
     logoTween: Phaser.Tweens.Tween | null;
+    audioManager: AudioManager;
 
     constructor() {
         super("MainMenu");
     }
 
     create() {
+        // Initialize audio manager
+        this.audioManager = new AudioManager(this);
+
         this.background = this.add.image(
             SCREEN_CENTER_X,
             SCREEN_CENTER_Y,
@@ -39,6 +44,9 @@ export class MainMenu extends Scene {
     }
 
     changeScene() {
+        // Play select sound
+        this.audioManager.playSelect();
+
         if (this.logoTween) {
             this.logoTween.stop();
             this.logoTween = null;

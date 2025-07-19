@@ -1,6 +1,7 @@
 import { EventBus } from "../EventBus";
 import { Scene } from "phaser";
 import { GameManager } from "../managers/GameManager";
+import { AudioManager } from "../managers/AudioManager";
 import {
     GAME_CONFIG,
     SCREEN_CENTER_X,
@@ -11,6 +12,7 @@ export class Game extends Scene {
     camera: Phaser.Cameras.Scene2D.Camera;
     background: Phaser.GameObjects.Image;
     gameManager: GameManager;
+    audioManager: AudioManager;
     // Store collision layers for enemy collision setup
     private walks: Phaser.Tilemaps.TilemapLayer | null = null;
     private buildings: Phaser.Tilemaps.TilemapLayer | null = null;
@@ -78,8 +80,12 @@ export class Game extends Scene {
         // Enable physics (no bounds - free movement)
         // this.physics.world.setBounds(0, 0, GAME_CONFIG.width, GAME_CONFIG.height);
 
+        // Initialize audio manager and start background music
+        this.audioManager = new AudioManager(this);
+        this.audioManager.startBackgroundMusic();
+
         // Initialize game manager
-        this.gameManager = new GameManager(this);
+        this.gameManager = new GameManager(this, this.audioManager);
         this.gameManager.initialize();
 
         // Set up camera to follow the player
@@ -107,6 +113,8 @@ export class Game extends Scene {
     }
 
     changeScene() {
+        // Stop background music when game ends
+        this.audioManager.stopBackgroundMusic();
         this.scene.start("GameOver");
     }
 
