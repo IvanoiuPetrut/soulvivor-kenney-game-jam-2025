@@ -165,7 +165,7 @@ export class EnemySystem {
         return [...this.enemies];
     }
 
-    getEnemyCount(): number {
+    getTotalEnemyCount(): number {
         return this.enemies.length;
     }
 

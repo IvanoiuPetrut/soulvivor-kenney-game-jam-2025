@@ -163,8 +163,11 @@ export abstract class Enemy implements GameEntity {
             },
         });
 
-        // TODO: Award XP points to player
-        console.log(`${this.type} defeated! Awarded ${this.stats.points} XP`);
+        // Emit death event for scoring
+        this.scene.events.emit("enemyDefeated", this.stats.points, this.type);
+        console.log(
+            `${this.type} defeated! Awarded ${this.stats.points} points`
+        );
     }
 
     destroy(): void {

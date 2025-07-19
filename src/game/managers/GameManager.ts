@@ -2,6 +2,7 @@ import { Player } from "../entities/Player";
 import { InputSystem } from "../systems/InputSystem";
 import { MovementSystem } from "../systems/MovementSystem";
 import { EnemySystem } from "../systems/EnemySystem";
+import { UISystem } from "../systems/UISystem";
 import { SCREEN_CENTER_X, SCREEN_CENTER_Y } from "../config/GameConfig";
 
 export interface GameState {
@@ -17,6 +18,7 @@ export class GameManager {
     private inputSystem: InputSystem;
     private movementSystem: MovementSystem;
     private enemySystem: EnemySystem;
+    private uiSystem: UISystem;
     private gameState: GameState;
 
     constructor(scene: Phaser.Scene) {
@@ -34,6 +36,7 @@ export class GameManager {
         this.inputSystem = new InputSystem(this.scene);
         this.movementSystem = new MovementSystem();
         this.enemySystem = new EnemySystem(this.scene);
+        this.uiSystem = new UISystem(this.scene);
 
         // Create the player
         this.player = new Player(this.scene, {
@@ -48,6 +51,14 @@ export class GameManager {
 
         // Set player target for enemy system
         this.enemySystem.setPlayer(this.player);
+
+        // Set up event listeners
+        this.setupEventListeners();
+
+        // Try to update to custom font if available
+        this.scene.time.delayedCall(100, () => {
+            this.uiSystem.updateToCustomFont();
+        });
     }
 
     update(deltaTime: number): void {
@@ -66,6 +77,9 @@ export class GameManager {
         // Update enemy system
         this.enemySystem.update(deltaTime);
 
+        // Update UI with current game state
+        this.uiSystem.update(this.gameState, this.player.health);
+
         // Check for siphon input
         if (this.inputSystem.isSiphonPressed()) {
             this.handleSiphonAttempt();
@@ -77,6 +91,16 @@ export class GameManager {
         }
     }
 
+    private setupEventListeners(): void {
+        // Listen for enemy defeats to award points
+        this.scene.events.on(
+            "enemyDefeated",
+            (points: number, enemyType: string) => {
+                this.addScore(points);
+            }
+        );
+    }
+
     private handleSiphonAttempt(): void {
         // TODO: Implement siphon logic when enemies are added
         console.log("Siphon attempt!");
@@ -84,8 +108,20 @@ export class GameManager {
 
     private gameOver(): void {
         this.gameState.isPlaying = false;
-        console.log("Game Over! Score:", this.gameState.score);
-        // TODO: Transition to game over scene
+
+        // Format final time for display
+        const minutes = Math.floor(this.gameState.timeElapsed / 60);
+        const seconds = Math.floor(this.gameState.timeElapsed % 60);
+        const finalTime = `${minutes.toString().padStart(2, "0")}:${seconds
+            .toString()
+            .padStart(2, "0")}`;
+
+        // Show game over screen
+        this.uiSystem.showGameOver(finalTime, this.gameState.score);
+
+        console.log(
+            `Game Over! Survived: ${finalTime}, Final Score: ${this.gameState.score}`
+        );
     }
 
     getPlayer(): Player {
@@ -103,6 +139,7 @@ export class GameManager {
     destroy(): void {
         this.movementSystem.clear();
         this.enemySystem.clear();
+        this.uiSystem.destroy();
     }
 
     getEnemySystem(): EnemySystem {

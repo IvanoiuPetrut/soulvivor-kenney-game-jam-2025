@@ -29,6 +29,27 @@ export class Preloader extends Scene {
             //  Update the progress bar (our bar is 464px wide, so 100% = 464px)
             bar.width = 4 + 460 * progress;
         });
+
+        // Load custom font
+        this.loadCustomFont();
+    }
+
+    private loadCustomFont(): void {
+        // Create a custom font face and add it to the document
+        const fontFace = new FontFace(
+            "KenneyPixel",
+            "url(assets/font/pixel.ttf)"
+        );
+
+        fontFace
+            .load()
+            .then((loadedFont) => {
+                document.fonts.add(loadedFont);
+                console.log("Custom font loaded successfully");
+            })
+            .catch((error) => {
+                console.warn("Custom font failed to load:", error);
+            });
     }
 
     preload() {
@@ -43,6 +64,9 @@ export class Preloader extends Scene {
         this.load.image("enemy_mage", "enemies/mage.png");
         this.load.image("enemy_crab", "enemies/crab.png");
         this.load.image("enemy_ghost", "enemies/ghost.png");
+
+        // Load custom font (TTF fonts need to be handled differently)
+        // We'll load it as a web font in the create method
     }
 
     create() {

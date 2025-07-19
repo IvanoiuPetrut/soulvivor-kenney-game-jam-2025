@@ -18,7 +18,8 @@ src/game/
 ├── systems/         # Game systems (Input, Movement, etc.)
 │   ├── InputSystem.ts      # Handles WASD/Arrow key input
 │   ├── MovementSystem.ts   # Manages entity movement updates
-│   └── EnemySystem.ts      # Enemy spawning and management
+│   ├── EnemySystem.ts      # Enemy spawning and management
+│   └── UISystem.ts         # UI display, timer, health, score (NEW!)
 ├── managers/        # High-level game coordinators
 │   └── GameManager.ts      # Central game state and system coordination
 └── scenes/          # Phaser scenes
@@ -38,7 +39,7 @@ src/game/
 -   **960x540 Resolution**: Modern 16:9 aspect ratio optimized for pixel art
 -   **3x Sprite Scaling**: 16x16 sprites displayed as 48x48 for perfect visibility
 -   **Pixel Art Rendering**: Crisp pixel scaling without blur or smoothing
--   **Configurable Options**: Easy to switch between different resolution presets
+-   **Custom Font**: Kenney Pixel Square font for authentic retro feel
 
 ### ✅ Player System
 
@@ -47,42 +48,65 @@ src/game/
 -   **Sprite Animations**: Breathing idle animation, movement bounce, sprite flipping
 -   **Visual Feedback**: Damage effects, healing effects, power acquisition
 
-### ✅ Enemy System (NEW!)
+### ✅ Enemy System
 
 -   **Three Enemy Types**: Mage (ranged), Crab (melee tank), Ghost (phase walker)
 -   **Intelligent AI**: Each enemy type has unique behavior patterns
 -   **Smart Spawning**: Off-screen spawning with spawn rate and count limits
 -   **Visual Effects**: Death animations, attack animations, type-specific behaviors
 
+### ✅ UI & Progression System (NEW!)
+
+-   **Survival Timer**: Real-time timer showing how long you've survived
+-   **Health Display**: Dynamic health bar with color-coded status
+-   **Score System**: Points awarded for defeating enemies
+-   **Game Over Screen**: Shows final stats and survival time
+-   **Custom Font**: Retro pixel font for authentic game feel
+
 ### ✅ Modular Systems
 
 -   **InputSystem**: Centralized input handling
 -   **MovementSystem**: Entity movement coordination
 -   **EnemySystem**: Enemy spawning, AI, and lifecycle management
+-   **UISystem**: User interface, timer, health, scoring display
 -   **GameManager**: High-level game state management
 
 ## Enemy Behaviors
 
 ### 🧙 **Mage Enemy**
 
--   **Health**: 30 HP | **Speed**: 80 | **Range**: 200 pixels
+-   **Health**: 30 HP | **Speed**: 80 | **Range**: 200 pixels | **Points**: 15
 -   **Behavior**: Ranged attacker that shoots purple magic orbs
 -   **AI**: Maintains distance, stops to cast when in range
 -   **Attack**: 2-second cooldown magic projectiles
 
 ### 🦀 **Crab Enemy**
 
--   **Health**: 50 HP | **Speed**: 60 | **Range**: 40 pixels
+-   **Health**: 50 HP | **Speed**: 60 | **Range**: 40 pixels | **Points**: 10
 -   **Behavior**: Tank melee enemy with pincer attacks
 -   **AI**: Aggressive pursuit, side-to-side scuttling movement
 -   **Attack**: 1.5-second cooldown pincer strikes
 
 ### 👻 **Ghost Enemy**
 
--   **Health**: 25 HP | **Speed**: 100 | **Range**: 35 pixels
+-   **Health**: 25 HP | **Speed**: 100 | **Range**: 35 pixels | **Points**: 12
 -   **Behavior**: Fast phase-walker, can move through screen bounds
 -   **AI**: Very aggressive pursuit, floating animation
 -   **Attack**: 1-second cooldown phase attacks
+
+## UI Elements
+
+### 📊 **HUD Display**
+
+-   **Survival Timer** (Top Center): MM:SS format, changes color over time
+-   **Health Display** (Top Left): Shows current health with color coding
+-   **Score Display** (Top Right): Running score from defeated enemies
+
+### 🎮 **Dynamic Visual Feedback**
+
+-   **Timer Colors**: White → Orange (2min) → Red (5min)
+-   **Health Colors**: Green (70+) → Orange (30-70) → Red (0-30)
+-   **Game Over Screen**: Final stats with animated restart prompt
 
 ## Display Configuration
 
@@ -132,7 +156,14 @@ Simply change `GAME_CONFIG` in `GameConfig.ts` to switch!
 -   **Spawning**: Off-screen enemy spawning every 3-5 seconds
 -   **AI Pathfinding**: Direct movement toward player with aggro ranges
 -   **Attack Systems**: Ranged projectiles, melee attacks, special abilities
--   **Performance**: Efficient entity cleanup and memory management
+-   **Scoring**: Point rewards for defeating enemies (10-15 points each)
+
+### UI System
+
+-   **Real-time Updates**: Timer, health, and score update every frame
+-   **Event-driven Scoring**: Enemies emit events when defeated
+-   **Custom Font Loading**: Web font integration for pixel-perfect text
+-   **Game Over Handling**: Comprehensive end-game statistics display
 
 ### Display System
 
@@ -149,7 +180,7 @@ The foundation is now ready for:
 2. **Siphon Mechanic**: Power stealing from Elite enemies
 3. **Power System**: Different abilities (Homing Spirit, Revolving Scythes, Chain Lightning)
 4. **XP & Progression**: Level-up system with passive upgrades
-5. **Game Balance**: Spawn rates, difficulty scaling
+5. **Audio System**: Sound effects and background music
 
 ## Running the Game
 
@@ -157,10 +188,13 @@ The foundation is now ready for:
 npm run dev
 ```
 
-**Enemies now spawn and chase the player!** You'll see:
+**Complete survival game experience!** You'll see:
 
--   **Crabs** spawning every ~3 seconds (max 3 on screen)
--   **Mages** spawning every ~5 seconds shooting purple orbs (max 2 on screen)
--   **Ghosts** spawning every ~4 seconds with floating animation (max 2 on screen)
+-   **Real-time survival timer** counting up in MM:SS format
+-   **Health display** showing your current status
+-   **Score counter** tracking points from defeated enemies
+-   **Enemies spawning and attacking** with full AI behaviors
+-   **Custom pixel font** for authentic retro styling
+-   **Game over screen** with final survival stats
 
-All enemies will pursue the player with their unique movement patterns and attack when in range. The vampire survivors-style gameplay loop is starting to come together!
+The game now feels like a proper vampire survivors-style experience with complete UI feedback and progression tracking!
