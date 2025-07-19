@@ -152,7 +152,7 @@ export class GameManager {
 
     private handlePowerSteal(): void {
         const enemies = this.enemySystem.getEnemies();
-        const siphonRange = 60; // 60 pixel range for power stealing
+        const siphonRange = 85; // 60 pixel range for power stealing
 
         // Find nearest enemy within siphon range
         let nearestEnemy = null;

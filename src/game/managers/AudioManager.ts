@@ -4,7 +4,7 @@ export class AudioManager {
     private sounds: Map<string, Phaser.Sound.BaseSound> = new Map();
 
     // Volume settings
-    private musicVolume: number = 0.2; // Lower volume for background music
+    private musicVolume: number = 0.3; // Lower volume for background music
     private sfxVolume: number = 0.7; // Higher volume for sound effects
 
     constructor(scene: Phaser.Scene) {
