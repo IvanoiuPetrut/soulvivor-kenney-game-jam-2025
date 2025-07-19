@@ -1,6 +1,7 @@
 import { XPDrop } from "../entities/XPDrop";
 import { Player } from "../entities/Player";
 import { EnemyType } from "../types/GameTypes";
+import { AudioManager } from "../managers/AudioManager";
 
 export interface XPSystemState {
     currentXP: number;
@@ -14,6 +15,7 @@ export class XPSystem {
     private xpDrops: XPDrop[] = [];
     private player: Player | null = null;
     private xpState: XPSystemState;
+    private audioManager: AudioManager | null = null;
 
     // XP progression settings
     private baseXPRequired: number = 10; // XP needed for level 2
@@ -35,6 +37,10 @@ export class XPSystem {
         this.player = player;
         // Set player reference for all existing drops
         this.xpDrops.forEach((drop) => drop.setPlayer(player));
+    }
+
+    setAudioManager(audioManager: AudioManager): void {
+        this.audioManager = audioManager;
     }
 
     private setupEventListeners(): void {
@@ -81,6 +87,11 @@ export class XPSystem {
     private addXP(amount: number): void {
         this.xpState.currentXP += amount;
         this.xpState.totalXP += amount;
+
+        // Play power-up sound when XP is collected
+        if (this.audioManager) {
+            this.audioManager.playPowerUp();
+        }
 
         // Check for level up
         if (this.xpState.currentXP >= this.xpState.xpToNextLevel) {

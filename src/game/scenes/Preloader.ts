@@ -73,6 +73,7 @@ export class Preloader extends Scene {
         // Load tilemap
         this.load.tilemapTiledJSON("map", "map/map.json");
         this.load.image("tiles", "map/tilemap.png");
+        this.load.image("xp_drop", "xp.png");
 
         // Load audio files
         this.load.audio("music", "audio/music.mp3");

@@ -30,10 +30,13 @@ export class XPDrop implements GameEntity {
         this.velocity = { x: 0, y: 0 };
 
         // Create XP drop sprite using the star image
-        this.sprite = scene.add.sprite(x, y, "star");
+        this.sprite = scene.add.sprite(x, y, "xp_drop");
         this.sprite.setScale(GAME_CONFIG.spriteScale * 0.5); // Smaller than normal sprites
         this.sprite.setDepth(45); // Above ground but below enemies
         this.sprite.setTint(0x00ff00); // Green color for XP
+        this.sprite.setAlpha(0.5);
+
+        // PostFX
 
         // Enable physics
         scene.physics.add.existing(this.sprite);
@@ -151,6 +154,9 @@ export class XPDrop implements GameEntity {
         this.bobTween = this.scene.tweens.add({
             targets: this.sprite,
             y: this.sprite.y - 3,
+            alpha: 0.5,
+            scaleX: GAME_CONFIG.spriteScale * 0.5,
+            scaleY: GAME_CONFIG.spriteScale * 0.5,
             duration: 1000,
             ease: "Sine.easeInOut",
             yoyo: true,

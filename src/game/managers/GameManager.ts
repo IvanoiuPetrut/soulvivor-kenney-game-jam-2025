@@ -102,6 +102,9 @@ export class GameManager {
         // Set player for XP system
         this.xpSystem.setPlayer(this.player);
 
+        // Set audio manager for XP system
+        this.xpSystem.setAudioManager(this.audioManager);
+
         // Set up event listeners
         this.setupEventListeners();
 
