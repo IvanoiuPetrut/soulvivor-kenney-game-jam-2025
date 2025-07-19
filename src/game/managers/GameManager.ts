@@ -6,6 +6,7 @@ import { UISystem } from "../systems/UISystem";
 import { SCREEN_CENTER_X, SCREEN_CENTER_Y } from "../config/GameConfig";
 import { Game } from "../scenes/Game";
 import { EnemyType } from "../types/GameTypes";
+import { GAME_CONFIG } from "../config/GameConfig";
 
 export interface GameState {
     isPlaying: boolean;
@@ -40,10 +41,18 @@ export class GameManager {
         this.enemySystem = new EnemySystem(this.scene);
         this.uiSystem = new UISystem(this.scene);
 
-        // Create the player
+        // Create the player at the center of the tilemap
+        // Tilemap is 150x150 tiles, each tile is 16px scaled by spriteScale (3x)
+        const tilemapWidth = 150;
+        const tilemapHeight = 150;
+        const tileSize = 16 * GAME_CONFIG.spriteScale; // 16px * 3 = 48px per tile
+
+        const tilemapCenterX = (tilemapWidth * tileSize) / 2;
+        const tilemapCenterY = (tilemapHeight * tileSize) / 2;
+
         this.player = new Player(this.scene, {
-            x: SCREEN_CENTER_X,
-            y: SCREEN_CENTER_Y,
+            x: tilemapCenterX,
+            y: tilemapCenterY,
             speed: 300,
             health: 100,
         });

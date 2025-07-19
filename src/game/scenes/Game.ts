@@ -41,13 +41,22 @@ export class Game extends Scene {
 
         let walks, buildings, objects;
         if (tileset) {
-            map.createLayer("Ground", tileset);
-            map.createLayer("GroundDetails", tileset);
-            map.createLayer("Rails", tileset);
-            map.createLayer("Shadows", tileset);
+            const ground = map.createLayer("Ground", tileset);
+            const groundDetails = map.createLayer("GroundDetails", tileset);
+            const rails = map.createLayer("Rails", tileset);
+            const shadows = map.createLayer("Shadows", tileset);
             walks = map.createLayer("Walks", tileset);
             buildings = map.createLayer("Buildings", tileset);
             objects = map.createLayer("Objects", tileset);
+
+            // Scale all layers to match sprite scale
+            ground?.setScale(GAME_CONFIG.spriteScale);
+            groundDetails?.setScale(GAME_CONFIG.spriteScale);
+            rails?.setScale(GAME_CONFIG.spriteScale);
+            shadows?.setScale(GAME_CONFIG.spriteScale);
+            walks?.setScale(GAME_CONFIG.spriteScale);
+            buildings?.setScale(GAME_CONFIG.spriteScale);
+            objects?.setScale(GAME_CONFIG.spriteScale);
 
             // Store layers for enemy collision setup
             this.walks = walks;
