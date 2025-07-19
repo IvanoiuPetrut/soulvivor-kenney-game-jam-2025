@@ -1,5 +1,6 @@
 import { GameState } from "../managers/GameManager";
 import { GAME_CONFIG } from "../config/GameConfig";
+import { XPSystemState } from "./XPSystem";
 
 export class UISystem {
     private scene: Phaser.Scene;
@@ -10,10 +11,10 @@ export class UISystem {
     // XP bar components
     private xpBarBackground: Phaser.GameObjects.Rectangle | null = null;
     private xpBarFill: Phaser.GameObjects.Rectangle | null = null;
+    private xpLevelText: Phaser.GameObjects.Text | null = null;
     private xpBarWidth: number = 400;
     private xpBarHeight: number = 12;
-    private currentXP: number = 45; // Demo value for visual testing
-    private maxXP: number = 100;
+    private xpState: XPSystemState | null = null;
 
     constructor(scene: Phaser.Scene) {
         this.scene = scene;
@@ -59,13 +60,26 @@ export class UISystem {
         this.xpBarFill = this.scene.add.rectangle(
             0,
             0,
-            this.xpBarWidth * (this.currentXP / this.maxXP),
+            0, // Start with 0 width, will be updated later
             this.xpBarHeight,
             0x4a90e2
         );
         this.xpBarFill.setDepth(201);
         this.xpBarFill.setScrollFactor(0); // Stick to screen
         this.xpBarFill.setOrigin(0, 0.5); // Left-aligned fill
+
+        // Create level text above XP bar
+        this.xpLevelText = this.scene.add
+            .text(0, 0, "Level 1", {
+                fontFamily: "Arial",
+                fontSize: "16px",
+                color: "#ffffff",
+                stroke: "#000000",
+                strokeThickness: 2,
+            })
+            .setOrigin(0.5, 1) // Center horizontally, bottom aligned
+            .setDepth(201)
+            .setScrollFactor(0);
 
         // Position XP bar initially
         this.updateXPBarPosition();
@@ -84,6 +98,11 @@ export class UISystem {
             // Position fill bar at left edge of background
             const fillX = centerX - this.xpBarWidth / 2;
             this.xpBarFill.setPosition(fillX, bottomY);
+        }
+
+        if (this.xpLevelText) {
+            // Position level text above XP bar
+            this.xpLevelText.setPosition(centerX, bottomY - 10);
         }
     }
 
@@ -121,10 +140,28 @@ export class UISystem {
             }
         }
 
-        // Update XP bar (using demo values for now - no logic implementation)
+        // Update XP bar
+        this.updateXPDisplay();
+    }
+
+    updateXPState(xpState: XPSystemState): void {
+        this.xpState = xpState;
+    }
+
+    private updateXPDisplay(): void {
+        if (!this.xpState) return;
+
+        // Update XP bar fill
         if (this.xpBarFill) {
-            const fillWidth = this.xpBarWidth * (this.currentXP / this.maxXP);
+            const progress =
+                this.xpState.currentXP / this.xpState.xpToNextLevel;
+            const fillWidth = this.xpBarWidth * progress;
             this.xpBarFill.setSize(fillWidth, this.xpBarHeight);
+        }
+
+        // Update level text
+        if (this.xpLevelText) {
+            this.xpLevelText.setText(`Level ${this.xpState.level}`);
         }
     }
 

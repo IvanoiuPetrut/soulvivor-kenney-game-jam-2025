@@ -4,6 +4,7 @@ import { MovementSystem } from "../systems/MovementSystem";
 import { EnemySystem } from "../systems/EnemySystem";
 import { UISystem } from "../systems/UISystem";
 import { WeaponSystem } from "../systems/WeaponSystem";
+import { XPSystem } from "../systems/XPSystem";
 import { AudioManager } from "./AudioManager";
 import { ParticleManager } from "./ParticleManager";
 import { SCREEN_CENTER_X, SCREEN_CENTER_Y } from "../config/GameConfig";
@@ -27,11 +28,13 @@ export class GameManager {
     private enemySystem: EnemySystem;
     private uiSystem: UISystem;
     private weaponSystem: WeaponSystem;
+    private xpSystem: XPSystem;
     private audioManager: AudioManager;
     private particleManager: ParticleManager;
     private gameState: GameState;
     private lastSiphonTime: number = 0;
     private siphonCooldown: number = 500; // 0.5 second cooldown
+    private isPaused: boolean = false;
 
     constructor(
         scene: Phaser.Scene,
@@ -55,6 +58,7 @@ export class GameManager {
         this.movementSystem = new MovementSystem();
         this.enemySystem = new EnemySystem(this.scene);
         this.uiSystem = new UISystem(this.scene);
+        this.xpSystem = new XPSystem(this.scene);
 
         // Create the player at the center of the tilemap
         // Tilemap is 150x150 tiles, each tile is 16px scaled by spriteScale (3x)
@@ -95,6 +99,9 @@ export class GameManager {
         // Set particle manager for enemy system
         this.enemySystem.setParticleManager(this.particleManager);
 
+        // Set player for XP system
+        this.xpSystem.setPlayer(this.player);
+
         // Set up event listeners
         this.setupEventListeners();
 
@@ -105,14 +112,17 @@ export class GameManager {
     }
 
     update(deltaTime: number): void {
+        // Don't update anything if game is paused
         if (!this.gameState.isPlaying) return;
 
         // Update game time
         this.gameState.timeElapsed += deltaTime;
 
-        // Handle input and move player
-        const movement = this.inputSystem.getMovementVector();
-        this.player.move(movement);
+        // Handle input and move player (only if game is playing and not paused)
+        if (!this.isPaused) {
+            const movement = this.inputSystem.getMovementVector();
+            this.player.move(movement);
+        }
 
         // Update all entities
         this.movementSystem.update(deltaTime);
@@ -124,8 +134,12 @@ export class GameManager {
         const enemies = this.enemySystem.getEnemies();
         this.weaponSystem.update(deltaTime, enemies);
 
-        // Update UI with current game state
+        // Update XP system
+        this.xpSystem.update(deltaTime);
+
+        // Update UI with current game state and XP
         this.uiSystem.update(this.gameState, this.player.health);
+        this.uiSystem.updateXPState(this.xpSystem.getXPState());
 
         // Check for power stealing (siphon input)
         if (this.inputSystem.isSiphonPressed() && this.canSiphon()) {
@@ -147,6 +161,11 @@ export class GameManager {
             }
         );
 
+        // Listen for level-ups to pause game and show upgrade screen
+        this.scene.events.on("levelUp", (xpState: any) => {
+            this.handleLevelUp();
+        });
+
         // Listen for enemy spawns to set up collision detection
         // this.scene.events.on(
         //     "enemySpawned",
@@ -157,6 +176,95 @@ export class GameManager {
         //         );
         //     }
         // );
+    }
+
+    private handleLevelUp(): void {
+        // Pause the game completely
+        this.pauseGame();
+
+        // Launch level-up screen
+        this.scene.scene.launch("LevelUpScreen");
+
+        // Get reference to level-up screen and show it
+        const levelUpScene = this.scene.scene.get("LevelUpScreen") as any;
+        if (levelUpScene && levelUpScene.showLevelUpScreen) {
+            levelUpScene.showLevelUpScreen((upgrade: any) => {
+                this.applyUpgrade(upgrade);
+                this.resumeGame();
+            });
+        }
+    }
+
+    private applyUpgrade(upgrade: any): void {
+        // Apply the selected upgrade (implementation will come next)
+        console.log("Applied upgrade:", upgrade.type);
+
+        // TODO: Implement upgrade effects
+        switch (upgrade.type) {
+            case "movement_speed":
+                // Increase player movement speed
+                break;
+            case "weapon_upgrade":
+                // Upgrade current weapon
+                break;
+            case "life_regen":
+                // Add health regen
+                break;
+        }
+    }
+
+    private pauseGame(): void {
+        // Set pause flag first
+        this.isPaused = true;
+        this.gameState.isPlaying = false;
+
+        // Stop player movement immediately by applying zero movement
+        this.player.move({ x: 0, y: 0 });
+
+        // Force stop player physics body before pausing physics
+        const playerBody = this.player.sprite
+            .body as Phaser.Physics.Arcade.Body;
+        if (playerBody) {
+            playerBody.setVelocity(0, 0);
+            playerBody.setAcceleration(0, 0);
+        }
+
+        // Stop all enemy movement
+        const enemies = this.enemySystem.getEnemies();
+        enemies.forEach((enemy) => {
+            const enemyBody = enemy.sprite.body as Phaser.Physics.Arcade.Body;
+            if (enemyBody) {
+                enemyBody.setVelocity(0, 0);
+                enemyBody.setAcceleration(0, 0);
+            }
+        });
+
+        // Pause physics for all objects AFTER stopping movement
+        this.scene.physics.pause();
+
+        // Pause all tweens
+        this.scene.tweens.pauseAll();
+
+        console.log("Game paused for level up");
+    }
+
+    private resumeGame(): void {
+        // Clear pause flag
+        this.isPaused = false;
+
+        // Resume game logic
+        this.gameState.isPlaying = true;
+
+        // Resume physics
+        this.scene.physics.resume();
+
+        // Resume all tweens
+        this.scene.tweens.resumeAll();
+
+        // Close level-up screen
+        this.scene.scene.stop("LevelUpScreen");
+
+        console.log("Game resumed from level up");
     }
 
     private canSiphon(): boolean {

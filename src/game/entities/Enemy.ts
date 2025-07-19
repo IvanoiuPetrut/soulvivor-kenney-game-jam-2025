@@ -166,6 +166,14 @@ export abstract class Enemy implements GameEntity {
             },
         });
 
+        // Create XP drop at enemy position
+        this.scene.events.emit(
+            "createXPDrop",
+            this.sprite.x,
+            this.sprite.y,
+            this.type
+        );
+
         // Emit death event for scoring
         this.scene.events.emit("enemyDefeated", this.stats.points, this.type);
         console.log(
