@@ -29,6 +29,22 @@ export class Game extends Scene {
         // Scale background to fit new resolution
         this.background.setDisplaySize(GAME_CONFIG.width, GAME_CONFIG.height);
 
+        // Tilemap
+        const map = this.make.tilemap({ key: "map" });
+        const tileset = map.addTilesetImage("map", "tiles");
+
+        //test tileset image
+
+        if (tileset) {
+            map.createLayer("Ground", tileset);
+            map.createLayer("GroundDetails", tileset);
+            map.createLayer("Rails", tileset);
+            map.createLayer("Shadows", tileset);
+            map.createLayer("Walks", tileset);
+            map.createLayer("Buildings", tileset);
+            map.createLayer("Objects", tileset);
+        }
+
         // Enable physics
         this.physics.world.setBounds(
             0,

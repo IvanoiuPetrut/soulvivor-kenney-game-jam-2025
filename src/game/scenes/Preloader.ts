@@ -65,6 +65,10 @@ export class Preloader extends Scene {
         this.load.image("enemy_crab", "enemies/crab.png");
         this.load.image("enemy_ghost", "enemies/ghost.png");
 
+        // Load tilemap
+        this.load.tilemapTiledJSON("map", "map/map.json");
+        this.load.image("tiles", "map/tilemap.png");
+
         // Load custom font (TTF fonts need to be handled differently)
         // We'll load it as a web font in the create method
     }
