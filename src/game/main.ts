@@ -3,6 +3,7 @@ import { GameOver } from "./scenes/GameOver";
 import { Game as MainGame } from "./scenes/Game";
 import { MainMenu } from "./scenes/MainMenu";
 import { LevelUpScreen } from "./scenes/LevelUpScreen";
+import { ControlsScene } from "./scenes/ControlsScene";
 import { AUTO, Game } from "phaser";
 import { Preloader } from "./scenes/Preloader";
 import { GAME_CONFIG } from "./config/GameConfig";
@@ -25,7 +26,15 @@ const config: Phaser.Types.Core.GameConfig = {
     render: {
         pixelArt: GAME_CONFIG.pixelArt,
     },
-    scene: [Boot, Preloader, MainMenu, MainGame, GameOver, LevelUpScreen],
+    scene: [
+        Boot,
+        Preloader,
+        MainMenu,
+        ControlsScene,
+        MainGame,
+        GameOver,
+        LevelUpScreen,
+    ],
 };
 
 const StartGame = (parent: string) => {

@@ -18,27 +18,70 @@ export class MainMenu extends Scene {
         // Initialize audio manager
         this.audioManager = new AudioManager(this);
 
-        this.background = this.add.image(
-            SCREEN_CENTER_X,
-            SCREEN_CENTER_Y,
-            "background"
-        );
-
-        this.logo = this.add
-            .image(SCREEN_CENTER_X, SCREEN_CENTER_Y - 120, "logo")
-            .setDepth(100);
-
         this.title = this.add
-            .text(SCREEN_CENTER_X, SCREEN_CENTER_Y + 80, "Main Menu", {
-                fontFamily: "Arial Black",
-                fontSize: 38,
+            .text(SCREEN_CENTER_X, SCREEN_CENTER_Y - 120, "Soulvivor", {
+                fontFamily: "KenneyPixel",
+                fontSize: 96,
                 color: "#ffffff",
                 stroke: "#000000",
-                strokeThickness: 8,
+                strokeThickness: 10,
                 align: "center",
             })
             .setOrigin(0.5)
             .setDepth(100);
+
+        // Add a "Start Game" button below the title
+        const startButton = this.add
+            .text(SCREEN_CENTER_X, SCREEN_CENTER_Y + 20, "Start Game", {
+                fontFamily: "KenneyPixel",
+                fontSize: 48,
+                color: "#ffffff",
+                padding: { left: 4, right: 4, top: 4, bottom: 4 },
+                align: "center",
+            })
+            .setOrigin(0.5)
+            .setDepth(100)
+            .setInteractive({ useHandCursor: true })
+            .on("pointerover", () => {
+                startButton.setStyle({
+                    color: " #68c5f9 ",
+                });
+            })
+            .on("pointerout", () => {
+                startButton.setStyle({
+                    color: "#ffffff",
+                });
+            })
+            .on("pointerdown", () => {
+                this.changeScene();
+            });
+
+        // Add a "Controls" button below the Start Game button
+        const controlsButton = this.add
+            .text(SCREEN_CENTER_X, SCREEN_CENTER_Y + 90, "Controls", {
+                fontFamily: "KenneyPixel",
+                fontSize: 36,
+                color: "#ffffff",
+                padding: { left: 4, right: 4, top: 4, bottom: 4 },
+                align: "center",
+            })
+            .setOrigin(0.5)
+            .setDepth(100)
+            .setInteractive({ useHandCursor: true })
+            .on("pointerover", () => {
+                controlsButton.setStyle({
+                    color: "#68c5f9",
+                });
+            })
+            .on("pointerout", () => {
+                controlsButton.setStyle({
+                    color: "#ffffff",
+                });
+            })
+            .on("pointerdown", () => {
+                this.audioManager.playSelect();
+                this.scene.start("ControlsScene");
+            });
 
         EventBus.emit("current-scene-ready", this);
     }

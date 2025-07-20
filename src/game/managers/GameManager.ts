@@ -199,21 +199,55 @@ export class GameManager {
     }
 
     private applyUpgrade(upgrade: any): void {
-        // Apply the selected upgrade (implementation will come next)
         console.log("Applied upgrade:", upgrade.type);
 
-        // TODO: Implement upgrade effects
         switch (upgrade.type) {
             case "movement_speed":
-                // Increase player movement speed
+                // Increase player movement speed by 15%
+                this.player.speed = Math.floor(this.player.speed * 1.15);
+                console.log(`Player speed increased to ${this.player.speed}`);
                 break;
             case "weapon_upgrade":
-                // Upgrade current weapon
+                // Improve current weapon damage and stats
+                this.upgradeCurrentWeapon();
                 break;
             case "life_regen":
-                // Add health regen
+                // Restore 50% of max health and increase max health by 20
+                const healAmount = Math.floor(this.player.maxHealth * 0.5);
+                this.player.health = Math.min(
+                    this.player.health + healAmount,
+                    this.player.maxHealth + 20
+                );
+                this.player.maxHealth += 20;
+                console.log(
+                    `Health restored by ${healAmount}, max health increased to ${this.player.maxHealth}`
+                );
                 break;
         }
+
+        // Play power-up sound for upgrade
+        this.audioManager.playPowerUp();
+    }
+
+    private upgradeCurrentWeapon(): void {
+        // Check what weapon the player currently has and upgrade it
+        const currentPower = this.weaponSystem.getCurrentPower();
+
+        if (currentPower === PowerType.NONE) {
+            console.log(
+                "No weapon to upgrade - giving the player a basic weapon"
+            );
+            // If no weapon, give them the crab sword
+            this.weaponSystem.setPower(PowerType.CRAB_SWORD);
+            return;
+        }
+
+        // Upgrade weapon stats based on current weapon type
+        console.log(`Upgrading weapon: ${currentPower}`);
+
+        // For now, we'll track weapon upgrades via the weapon system
+        // This could be expanded to modify damage multipliers, cooldowns, etc.
+        this.weaponSystem.upgradeWeapon();
     }
 
     private pauseGame(): void {

@@ -317,6 +317,35 @@ export class WeaponSystem {
         return this.currentPower;
     }
 
+    upgradeWeapon(): void {
+        switch (this.currentPower) {
+            case PowerType.CRAB_SWORD:
+                // Increase sword speed and radius
+                this.swordRadius = Math.min(this.swordRadius + 10, 80); // Max radius 80
+                console.log(
+                    `Crab sword upgraded! New radius: ${this.swordRadius}`
+                );
+                break;
+            case PowerType.GHOST_DAGGERS:
+                // Reduce cooldown for faster shooting
+                this.daggerCooldown = Math.max(this.daggerCooldown - 100, 200); // Min 200ms cooldown
+                console.log(
+                    `Ghost daggers upgraded! New cooldown: ${this.daggerCooldown}ms`
+                );
+                break;
+            case PowerType.MAGE_PROJECTILE:
+                // Reduce cooldown for faster shooting
+                this.mageCooldown = Math.max(this.mageCooldown - 200, 400); // Min 400ms cooldown
+                console.log(
+                    `Mage projectile upgraded! New cooldown: ${this.mageCooldown}ms`
+                );
+                break;
+            default:
+                console.log("No weapon to upgrade");
+                break;
+        }
+    }
+
     private cleanup(): void {
         // Clean up sword
         if (this.swordSprite) {
