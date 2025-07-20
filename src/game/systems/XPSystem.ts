@@ -90,7 +90,7 @@ export class XPSystem {
 
         // Play power-up sound when XP is collected
         if (this.audioManager) {
-            this.audioManager.playPowerUp();
+            this.audioManager.playCollect();
         }
 
         // Check for level up

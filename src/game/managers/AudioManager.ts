@@ -14,7 +14,7 @@ export class AudioManager {
 
     private initializeSounds(): void {
         // Initialize all sound effects
-        const soundKeys = ["select", "hit", "powerUp", "hurt"];
+        const soundKeys = ["select", "hit", "powerUp", "hurt", "collect"];
 
         soundKeys.forEach((key) => {
             if (this.scene.cache.audio.exists(key)) {
@@ -56,6 +56,10 @@ export class AudioManager {
 
     playPowerUp(): void {
         this.playSound("powerUp");
+    }
+
+    playCollect(): void {
+        this.playSound("collect");
     }
 
     playHurt(): void {

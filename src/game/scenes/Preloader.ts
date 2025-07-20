@@ -81,6 +81,7 @@ export class Preloader extends Scene {
         this.load.audio("hit", "audio/hit.wav");
         this.load.audio("powerUp", "audio/powerUp.wav");
         this.load.audio("hurt", "audio/hurt.wav");
+        this.load.audio("collect", "audio/xp.wav");
 
         // Load custom font (TTF fonts need to be handled differently)
         // We'll load it as a web font in the create method
