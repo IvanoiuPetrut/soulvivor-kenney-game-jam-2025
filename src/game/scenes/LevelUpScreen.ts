@@ -6,9 +6,9 @@ import {
 } from "../config/GameConfig";
 
 export enum UpgradeType {
-    MOVEMENT_SPEED = "movement_speed",
-    WEAPON_UPGRADE = "weapon_upgrade",
-    LIFE_REGEN = "life_regen",
+    MOVEMENT = "movement",
+    COMBAT = "combat",
+    VITALITY = "vitality",
 }
 
 export interface Upgrade {
@@ -61,24 +61,25 @@ export class LevelUpScreen extends Scene {
     private generateUpgradeOptions(): void {
         const allUpgrades: Upgrade[] = [
             {
-                type: UpgradeType.MOVEMENT_SPEED,
-                title: "Swift Feet",
+                type: UpgradeType.MOVEMENT,
+                title: "Swift Movement",
                 description: "+20% Movement Speed\nDodge enemies with ease!",
             },
             {
-                type: UpgradeType.WEAPON_UPGRADE,
-                title: "Weapon Mastery",
+                type: UpgradeType.COMBAT,
+                title: "Combat Mastery",
                 description:
-                    "Improve current weapon:\n• Sword: +25% range, +15% speed\n• Daggers: -20% cooldown, +1 dagger\n• Magic: +50% cast speed",
+                    "Improve ALL weapons:\n• +25% damage & speed\n• +20% range & size\n• +1 extra projectile",
             },
             {
-                type: UpgradeType.LIFE_REGEN,
-                title: "Vitality",
-                description: "+5 Max Health\n+1 Health per 3 seconds",
+                type: UpgradeType.VITALITY,
+                title: "Vitality Boost",
+                description:
+                    "+25 Max Health\n+3 Health regeneration per second\n+10% damage resistance",
             },
         ];
 
-        // For now, show all 3 options (later could be randomized selection)
+        // Show all 3 options every time
         this.upgradeOptions = allUpgrades;
     }
 
@@ -97,15 +98,33 @@ export class LevelUpScreen extends Scene {
             const container = this.add.container(x, y);
             container.setDepth(1001);
 
-            // Background box
+            // Background box with color coding
+            let bgColor = 0x2c3e50;
+            let borderColor = 0x3498db;
+
+            switch (upgrade.type) {
+                case UpgradeType.MOVEMENT:
+                    bgColor = 0x1a4c96;
+                    borderColor = 0x3498db;
+                    break;
+                case UpgradeType.COMBAT:
+                    bgColor = 0x8b2635;
+                    borderColor = 0xe74c3c;
+                    break;
+                case UpgradeType.VITALITY:
+                    bgColor = 0x1e7e34;
+                    borderColor = 0x27ae60;
+                    break;
+            }
+
             const box = this.add.rectangle(
                 0,
                 0,
                 optionWidth,
                 optionHeight,
-                0x2c3e50
+                bgColor
             );
-            box.setStrokeStyle(3, 0x3498db);
+            box.setStrokeStyle(3, borderColor);
 
             // Title text
             const titleText = this.add
@@ -140,7 +159,7 @@ export class LevelUpScreen extends Scene {
 
             // Hover effects
             box.on("pointerover", () => {
-                box.setStrokeStyle(3, 0xe74c3c);
+                box.setStrokeStyle(3, 0xffffff);
                 container.setScale(1.05);
                 this.tweens.add({
                     targets: container,
@@ -152,7 +171,7 @@ export class LevelUpScreen extends Scene {
             });
 
             box.on("pointerout", () => {
-                box.setStrokeStyle(3, 0x3498db);
+                box.setStrokeStyle(3, borderColor);
                 this.tweens.add({
                     targets: container,
                     scaleX: 1.0,

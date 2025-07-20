@@ -76,3 +76,85 @@ export interface EnemyBehavior {
     attackPattern: "melee" | "ranged" | "special";
     aggroRange: number; // Distance at which enemy starts chasing player
 }
+
+// Skill System Types
+export enum SkillTree {
+    MOVEMENT = "movement",
+    COMBAT = "combat",
+    VITALITY = "vitality",
+}
+
+export enum SkillType {
+    // Movement skills
+    SPEED_BOOST = "speed_boost",
+    DASH = "dash",
+    MOVEMENT_EFFICIENCY = "movement_efficiency",
+
+    // Combat skills
+    WEAPON_MASTERY = "weapon_mastery",
+    ATTACK_SPEED = "attack_speed",
+    WEAPON_RANGE = "weapon_range",
+    MULTI_STRIKE = "multi_strike",
+
+    // Vitality skills
+    MAX_HEALTH = "max_health",
+    HEALTH_REGEN = "health_regen",
+    DAMAGE_RESISTANCE = "damage_resistance",
+    LIFESTEAL = "lifesteal",
+}
+
+export interface Skill {
+    id: SkillType;
+    name: string;
+    description: string;
+    tree: SkillTree;
+    maxLevel: number;
+    currentLevel: number;
+    cost: number; // Skill points required per level
+    prerequisites?: SkillType[]; // Required skills
+}
+
+export interface PlayerStats {
+    // Base stats
+    baseSpeed: number;
+    baseHealth: number;
+
+    // Skill-modified stats
+    movementSpeed: number;
+    maxHealth: number;
+    healthRegen: number; // HP per second
+    damageResistance: number; // Percentage damage reduction
+
+    // Combat stats
+    weaponDamageMultiplier: number;
+    attackSpeedMultiplier: number;
+    weaponRangeMultiplier: number;
+    additionalProjectiles: number; // For daggers/projectiles
+
+    // Skill points
+    availableSkillPoints: number;
+    totalSkillPoints: number;
+
+    // Regeneration tracking
+    lastRegenTime: number;
+}
+
+export interface SkillUpgrade {
+    skillId: SkillType;
+    tree: SkillTree;
+    pointsToSpend: number;
+}
+
+// Legacy upgrade system (keeping for backwards compatibility)
+export enum UpgradeType {
+    MOVEMENT_SPEED = "movement_speed",
+    WEAPON_UPGRADE = "weapon_upgrade",
+    LIFE_REGEN = "life_regen",
+}
+
+export interface Upgrade {
+    type: UpgradeType;
+    title: string;
+    description: string;
+    icon?: string;
+}

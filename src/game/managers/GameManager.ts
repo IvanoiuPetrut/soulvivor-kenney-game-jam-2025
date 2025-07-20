@@ -13,6 +13,8 @@ import { EnemyType } from "../types/GameTypes";
 import { GAME_CONFIG } from "../config/GameConfig";
 import { PowerType } from "../types/GameTypes";
 import { HighScoreScene } from "../scenes/HighScoreScene";
+import { UpgradeType, Upgrade } from "../scenes/LevelUpScreen";
+import { SkillType } from "../types/GameTypes";
 
 export interface GameState {
     isPlaying: boolean;
@@ -204,42 +206,113 @@ export class GameManager {
         // Get reference to level-up screen and show it
         const levelUpScene = this.scene.scene.get("LevelUpScreen") as any;
         if (levelUpScene && levelUpScene.showLevelUpScreen) {
-            levelUpScene.showLevelUpScreen((upgrade: any) => {
+            levelUpScene.showLevelUpScreen((upgrade: Upgrade) => {
                 this.applyUpgrade(upgrade);
                 this.resumeGame();
             });
         }
     }
 
-    private applyUpgrade(upgrade: any): void {
+    private applyUpgrade(upgrade: Upgrade): void {
         console.log("Applied upgrade:", upgrade.type);
 
         switch (upgrade.type) {
-            case "movement_speed":
-                // Increase player movement speed by 15%
-                this.player.speed = Math.floor(this.player.speed * 1.15);
-                console.log(`Player speed increased to ${this.player.speed}`);
-                break;
-            case "weapon_upgrade":
-                // Improve current weapon damage and stats
-                this.upgradeCurrentWeapon();
-                break;
-            case "life_regen":
-                // Restore 50% of max health and increase max health by 20
-                const healAmount = Math.floor(this.player.maxHealth * 0.5);
-                this.player.health = Math.min(
-                    this.player.health + healAmount,
-                    this.player.maxHealth + 20
+            case UpgradeType.MOVEMENT:
+                // Apply cumulative speed boost
+                this.player.applySkillBonus(
+                    SkillType.SPEED_BOOST,
+                    this.getSkillLevel(SkillType.SPEED_BOOST) + 1
                 );
-                this.player.maxHealth += 20;
+                this.setSkillLevel(
+                    SkillType.SPEED_BOOST,
+                    this.getSkillLevel(SkillType.SPEED_BOOST) + 1
+                );
                 console.log(
-                    `Health restored by ${healAmount}, max health increased to ${this.player.maxHealth}`
+                    `Movement speed increased! Level: ${this.getSkillLevel(
+                        SkillType.SPEED_BOOST
+                    )}`
                 );
+                break;
+
+            case UpgradeType.COMBAT:
+                // Apply all combat bonuses cumulatively
+                const currentCombatLevel = this.getSkillLevel(
+                    SkillType.WEAPON_MASTERY
+                );
+                const newCombatLevel = currentCombatLevel + 1;
+
+                // Apply all combat upgrades
+                this.player.applySkillBonus(
+                    SkillType.WEAPON_MASTERY,
+                    newCombatLevel
+                );
+                this.player.applySkillBonus(
+                    SkillType.ATTACK_SPEED,
+                    newCombatLevel
+                );
+                this.player.applySkillBonus(
+                    SkillType.WEAPON_RANGE,
+                    newCombatLevel
+                );
+                this.player.applySkillBonus(
+                    SkillType.MULTI_STRIKE,
+                    newCombatLevel
+                );
+
+                // Track the level
+                this.setSkillLevel(SkillType.WEAPON_MASTERY, newCombatLevel);
+                this.setSkillLevel(SkillType.ATTACK_SPEED, newCombatLevel);
+                this.setSkillLevel(SkillType.WEAPON_RANGE, newCombatLevel);
+                this.setSkillLevel(SkillType.MULTI_STRIKE, newCombatLevel);
+
+                console.log(
+                    `Combat mastery increased! Level: ${newCombatLevel}`
+                );
+                break;
+
+            case UpgradeType.VITALITY:
+                // Apply all vitality bonuses cumulatively
+                const currentVitalityLevel = this.getSkillLevel(
+                    SkillType.MAX_HEALTH
+                );
+                const newVitalityLevel = currentVitalityLevel + 1;
+
+                // Apply all vitality upgrades
+                this.player.applySkillBonus(
+                    SkillType.MAX_HEALTH,
+                    newVitalityLevel
+                );
+                this.player.applySkillBonus(
+                    SkillType.HEALTH_REGEN,
+                    newVitalityLevel
+                );
+                this.player.applySkillBonus(
+                    SkillType.DAMAGE_RESISTANCE,
+                    newVitalityLevel
+                );
+
+                // Track the levels
+                this.setSkillLevel(SkillType.MAX_HEALTH, newVitalityLevel);
+                this.setSkillLevel(SkillType.HEALTH_REGEN, newVitalityLevel);
+                this.setSkillLevel(
+                    SkillType.DAMAGE_RESISTANCE,
+                    newVitalityLevel
+                );
+
+                console.log(`Vitality increased! Level: ${newVitalityLevel}`);
                 break;
         }
 
         // Play power-up sound for upgrade
         this.audioManager.playPowerUp();
+    }
+
+    private getSkillLevel(skillType: SkillType): number {
+        return this.player.getSkillLevel(skillType);
+    }
+
+    private setSkillLevel(skillType: SkillType, level: number): void {
+        this.player.setSkillLevel(skillType, level);
     }
 
     private upgradeCurrentWeapon(): void {

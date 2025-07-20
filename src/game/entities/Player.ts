@@ -5,6 +5,9 @@ import {
     Velocity,
     Power,
     PowerType,
+    PlayerStats,
+    SkillType,
+    SkillTree,
 } from "../types/GameTypes";
 import { GAME_CONFIG } from "../config/GameConfig";
 import { AudioManager } from "../managers/AudioManager";
@@ -22,6 +25,10 @@ export class Player implements GameEntity {
     private audioManager: AudioManager | null = null;
     private particleManager: ParticleManager | null = null;
 
+    // Skill system
+    public stats: PlayerStats;
+    private skillLevels: Map<SkillType, number> = new Map();
+
     // Health bar components
     private healthBarBackground: Phaser.GameObjects.Rectangle;
     private healthBarFill: Phaser.GameObjects.Rectangle;
@@ -36,9 +43,36 @@ export class Player implements GameEntity {
 
     constructor(scene: Phaser.Scene, config: PlayerConfig) {
         this.scene = scene;
-        this.speed = config.speed;
+
+        // Initialize stats system
+        this.stats = {
+            // Base stats
+            baseSpeed: config.speed,
+            baseHealth: config.health,
+
+            // Skill-modified stats (start with base values)
+            movementSpeed: config.speed,
+            maxHealth: config.health,
+            healthRegen: 0,
+            damageResistance: 0,
+
+            // Combat stats
+            weaponDamageMultiplier: 1.0,
+            attackSpeedMultiplier: 1.0,
+            weaponRangeMultiplier: 1.0,
+            additionalProjectiles: 0,
+
+            // Skill points (start with 0, will be awarded on level up)
+            availableSkillPoints: 0,
+            totalSkillPoints: 0,
+
+            // Regeneration tracking
+            lastRegenTime: 0,
+        };
+
+        this.speed = this.stats.movementSpeed;
         this.health = config.health;
-        this.maxHealth = config.health;
+        this.maxHealth = this.stats.maxHealth;
 
         this.position = { x: config.x, y: config.y };
         this.velocity = { x: 0, y: 0 };
@@ -98,6 +132,12 @@ export class Player implements GameEntity {
         // Update health bar position
         this.updateHealthBar();
 
+        // Handle health regeneration
+        this.handleHealthRegen(deltaTime);
+
+        // Update speed based on current stats
+        this.speed = this.stats.movementSpeed;
+
         // Update movement state for animations
         this.updateMovementState();
 
@@ -107,6 +147,28 @@ export class Player implements GameEntity {
                 this.sprite.x,
                 this.sprite.y
             );
+        }
+    }
+
+    private handleHealthRegen(deltaTime: number): void {
+        if (this.stats.healthRegen <= 0) return;
+        if (this.health >= this.maxHealth) return;
+
+        const currentTime = this.scene.time.now;
+
+        // Regenerate health every second
+        if (currentTime - this.stats.lastRegenTime >= 1000) {
+            const regenAmount = this.stats.healthRegen;
+            this.health = Math.min(this.health + regenAmount, this.maxHealth);
+            this.stats.lastRegenTime = currentTime;
+
+            // Visual feedback for regeneration
+            if (this.particleManager) {
+                this.particleManager.createPowerUpEffect(
+                    this.sprite.x,
+                    this.sprite.y
+                );
+            }
         }
     }
 
@@ -260,20 +322,61 @@ export class Player implements GameEntity {
         this.particleManager = particleManager;
     }
 
-    takeDamage(amount: number): void {
-        this.health = Math.max(0, this.health - amount);
+    public applySkillBonus(skillType: SkillType, level: number): void {
+        switch (skillType) {
+            // Movement skills
+            case SkillType.SPEED_BOOST:
+                this.stats.movementSpeed =
+                    this.stats.baseSpeed * (1 + level * 0.15); // 15% per level
+                break;
+            case SkillType.MOVEMENT_EFFICIENCY:
+                // Reduces stamina cost for movement (placeholder for future stamina system)
+                break;
+
+            // Combat skills
+            case SkillType.WEAPON_MASTERY:
+                this.stats.weaponDamageMultiplier = 1 + level * 0.2; // 20% damage per level
+                break;
+            case SkillType.ATTACK_SPEED:
+                this.stats.attackSpeedMultiplier = 1 + level * 0.25; // 25% attack speed per level
+                break;
+            case SkillType.WEAPON_RANGE:
+                this.stats.weaponRangeMultiplier = 1 + level * 0.2; // 20% range per level
+                break;
+            case SkillType.MULTI_STRIKE:
+                this.stats.additionalProjectiles = level; // +1 projectile per level
+                break;
+
+            // Vitality skills
+            case SkillType.MAX_HEALTH:
+                const healthIncrease = level * 20; // +20 HP per level
+                this.stats.maxHealth = this.stats.baseHealth + healthIncrease;
+                this.maxHealth = this.stats.maxHealth;
+                break;
+            case SkillType.HEALTH_REGEN:
+                this.stats.healthRegen = level * 2; // +2 HP/sec per level
+                break;
+            case SkillType.DAMAGE_RESISTANCE:
+                this.stats.damageResistance = Math.min(level * 0.1, 0.5); // 10% per level, max 50%
+                break;
+            case SkillType.LIFESTEAL:
+                // Will be implemented in weapon systems
+                break;
+        }
+    }
+
+    public takeDamage(amount: number): void {
+        // Apply damage resistance
+        const finalDamage = Math.max(
+            1,
+            Math.floor(amount * (1 - this.stats.damageResistance))
+        );
+
+        this.health = Math.max(0, this.health - finalDamage);
 
         // Play hurt sound
         if (this.audioManager) {
             this.audioManager.playHurt();
-        }
-
-        // Create hit particles
-        if (this.particleManager) {
-            this.particleManager.createPlayerHitEffect(
-                this.sprite.x,
-                this.sprite.y
-            );
         }
 
         // Enhanced visual feedback for taking damage
@@ -334,6 +437,29 @@ export class Player implements GameEntity {
                 repeat: 2,
             });
         }
+
+        // Visual feedback
+        this.sprite.setTint(0xff0000);
+        this.scene.time.delayedCall(200, () => {
+            this.sprite.setTint(0xffffff);
+        });
+
+        // Screen shake effect
+        this.scene.cameras.main.shake(100, 0.01);
+
+        // Damage particle effect
+        if (this.particleManager) {
+            this.particleManager.createPlayerHitEffect(
+                this.sprite.x,
+                this.sprite.y
+            );
+        }
+
+        console.log(
+            `Player took ${finalDamage} damage (${amount} reduced by ${Math.floor(
+                this.stats.damageResistance * 100
+            )}%)`
+        );
 
         if (this.health <= 0) {
             this.destroy();
@@ -421,5 +547,13 @@ export class Player implements GameEntity {
         }
 
         this.sprite.destroy();
+    }
+
+    public getSkillLevel(skillType: SkillType): number {
+        return this.skillLevels.get(skillType) || 0;
+    }
+
+    public setSkillLevel(skillType: SkillType, level: number): void {
+        this.skillLevels.set(skillType, level);
     }
 }
