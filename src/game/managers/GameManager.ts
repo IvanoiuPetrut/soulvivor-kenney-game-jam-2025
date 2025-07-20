@@ -37,6 +37,11 @@ export class GameManager {
     private siphonCooldown: number = 500; // 0.5 second cooldown
     private isPaused: boolean = false;
 
+    // Siphon target highlighting
+    private siphonTargetHighlight: Phaser.GameObjects.Graphics | null = null;
+    private siphonRangeIndicator: Phaser.GameObjects.Graphics | null = null;
+    private currentSiphonTarget: any = null;
+
     constructor(
         scene: Phaser.Scene,
         audioManager: AudioManager,
@@ -51,6 +56,9 @@ export class GameManager {
             level: 1,
             timeElapsed: 0,
         };
+
+        // Create siphon target highlight graphic
+        this.createSiphonHighlight();
     }
 
     initialize(): void {
@@ -144,6 +152,10 @@ export class GameManager {
         // Update UI with current game state and XP
         this.uiSystem.update(this.gameState, this.player.health);
         this.uiSystem.updateXPState(this.xpSystem.getXPState());
+
+        // Update siphon target highlighting and range indicator
+        this.updateSiphonTargetHighlight();
+        this.updateSiphonRangeIndicator();
 
         // Check for power stealing (siphon input)
         if (this.inputSystem.isSiphonPressed() && this.canSiphon()) {
@@ -276,6 +288,10 @@ export class GameManager {
                 enemyBody.setAcceleration(0, 0);
             }
         });
+
+        // Hide siphon indicators during pause
+        this.hideSiphonHighlight();
+        this.hideSiphonRangeIndicator();
 
         // Pause physics for all objects AFTER stopping movement
         this.scene.physics.pause();
@@ -428,6 +444,152 @@ export class GameManager {
         });
     }
 
+    private createSiphonHighlight(): void {
+        // Create a graphics object for the siphon target highlight
+        this.siphonTargetHighlight = this.scene.add.graphics();
+        this.siphonTargetHighlight.setDepth(60); // Above enemies but below player
+        this.siphonTargetHighlight.setVisible(false);
+
+        // Create a graphics object for the siphon range indicator
+        this.siphonRangeIndicator = this.scene.add.graphics();
+        this.siphonRangeIndicator.setDepth(55); // Below enemies and target highlight
+        this.siphonRangeIndicator.setVisible(false);
+    }
+
+    private updateSiphonTargetHighlight(): void {
+        if (!this.siphonTargetHighlight) return;
+
+        const enemies = this.enemySystem.getEnemies();
+        const siphonRange = 85;
+
+        // Find nearest enemy within siphon range
+        let nearestEnemy = null;
+        let nearestDistance = siphonRange;
+
+        enemies.forEach((enemy) => {
+            if (!enemy.sprite.active) return;
+
+            const dx = enemy.sprite.x - this.player.sprite.x;
+            const dy = enemy.sprite.y - this.player.sprite.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+
+            if (distance < nearestDistance) {
+                nearestEnemy = enemy;
+                nearestDistance = distance;
+            }
+        });
+
+        // Update highlight visibility and position
+        if (nearestEnemy && this.canSiphon()) {
+            this.currentSiphonTarget = nearestEnemy;
+            this.showSiphonHighlight(nearestEnemy);
+        } else {
+            this.currentSiphonTarget = null;
+            this.hideSiphonHighlight();
+        }
+    }
+
+    private showSiphonHighlight(enemy: any): void {
+        if (!this.siphonTargetHighlight) return;
+
+        // Clear previous drawing
+        this.siphonTargetHighlight.clear();
+
+        // Set position to enemy
+        this.siphonTargetHighlight.setPosition(enemy.sprite.x, enemy.sprite.y);
+
+        // Create pulsing glow effect
+        const time = this.scene.time.now * 0.005; // Slow pulsing
+        const pulseAlpha = 0.3 + 0.4 * Math.sin(time); // Pulse between 0.3 and 0.7
+        const pulseRadius = 25 + 5 * Math.sin(time * 2); // Slightly varying radius
+
+        // Draw outer glow ring
+        this.siphonTargetHighlight.lineStyle(3, 0xffff00, pulseAlpha); // Yellow glow
+        this.siphonTargetHighlight.strokeCircle(0, 0, pulseRadius);
+
+        // Draw inner highlight ring
+        this.siphonTargetHighlight.lineStyle(2, 0xffffff, 0.8); // White inner ring
+        this.siphonTargetHighlight.strokeCircle(0, 0, 20);
+
+        // Add power type indicator (small icon/color based on enemy type)
+        let indicatorColor = 0xffffff;
+        switch (enemy.type) {
+            case EnemyType.CRAB:
+                indicatorColor = 0xff4444; // Red for sword
+                break;
+            case EnemyType.GHOST:
+                indicatorColor = 0x44ff44; // Green for daggers
+                break;
+            case EnemyType.MAGE:
+                indicatorColor = 0x4444ff; // Blue for projectile
+                break;
+        }
+
+        // Draw small indicator dots around the enemy
+        this.siphonTargetHighlight.fillStyle(indicatorColor, 0.9);
+        for (let i = 0; i < 6; i++) {
+            const angle = (i / 6) * Math.PI * 2 + time;
+            const dotX = Math.cos(angle) * 30;
+            const dotY = Math.sin(angle) * 30;
+            this.siphonTargetHighlight.fillCircle(dotX, dotY, 3);
+        }
+
+        this.siphonTargetHighlight.setVisible(true);
+    }
+
+    private hideSiphonHighlight(): void {
+        if (this.siphonTargetHighlight) {
+            this.siphonTargetHighlight.setVisible(false);
+            this.siphonTargetHighlight.clear();
+        }
+    }
+
+    private updateSiphonRangeIndicator(): void {
+        if (!this.siphonRangeIndicator) return;
+
+        // Show range indicator only when space key is being held
+        if (this.inputSystem.isSiphonPressed()) {
+            this.showSiphonRangeIndicator();
+        } else {
+            this.hideSiphonRangeIndicator();
+        }
+    }
+
+    private showSiphonRangeIndicator(): void {
+        if (!this.siphonRangeIndicator) return;
+
+        // Clear previous drawing
+        this.siphonRangeIndicator.clear();
+
+        // Set position to player
+        this.siphonRangeIndicator.setPosition(
+            this.player.sprite.x,
+            this.player.sprite.y
+        );
+
+        // Draw siphon range circle
+        const siphonRange = 85;
+        const time = this.scene.time.now * 0.003;
+        const pulseAlpha = 0.1 + 0.05 * Math.sin(time); // Very subtle pulse
+
+        // Draw range circle
+        this.siphonRangeIndicator.lineStyle(2, 0x00ffff, pulseAlpha); // Cyan color
+        this.siphonRangeIndicator.strokeCircle(0, 0, siphonRange);
+
+        // Add subtle fill for better visibility
+        this.siphonRangeIndicator.fillStyle(0x00ffff, pulseAlpha * 0.3);
+        this.siphonRangeIndicator.fillCircle(0, 0, siphonRange);
+
+        this.siphonRangeIndicator.setVisible(true);
+    }
+
+    private hideSiphonRangeIndicator(): void {
+        if (this.siphonRangeIndicator) {
+            this.siphonRangeIndicator.setVisible(false);
+            this.siphonRangeIndicator.clear();
+        }
+    }
+
     getPlayer(): Player {
         return this.player;
     }
@@ -445,6 +607,16 @@ export class GameManager {
         this.enemySystem.clear();
         this.weaponSystem.destroy();
         this.uiSystem.destroy();
+
+        // Clean up siphon graphics
+        if (this.siphonTargetHighlight) {
+            this.siphonTargetHighlight.destroy();
+            this.siphonTargetHighlight = null;
+        }
+        if (this.siphonRangeIndicator) {
+            this.siphonRangeIndicator.destroy();
+            this.siphonRangeIndicator = null;
+        }
     }
 
     getEnemySystem(): EnemySystem {
