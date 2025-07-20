@@ -83,6 +83,33 @@ export class MainMenu extends Scene {
                 this.scene.start("ControlsScene");
             });
 
+        // Add a "High Scores" button below the Controls button
+        const highScoresButton = this.add
+            .text(SCREEN_CENTER_X, SCREEN_CENTER_Y + 160, "High Scores", {
+                fontFamily: "KenneyPixel",
+                fontSize: 36,
+                color: "#ffffff",
+                padding: { left: 4, right: 4, top: 4, bottom: 4 },
+                align: "center",
+            })
+            .setOrigin(0.5)
+            .setDepth(100)
+            .setInteractive({ useHandCursor: true })
+            .on("pointerover", () => {
+                highScoresButton.setStyle({
+                    color: "#68c5f9",
+                });
+            })
+            .on("pointerout", () => {
+                highScoresButton.setStyle({
+                    color: "#ffffff",
+                });
+            })
+            .on("pointerdown", () => {
+                this.audioManager.playSelect();
+                this.scene.start("HighScoreScene");
+            });
+
         EventBus.emit("current-scene-ready", this);
     }
 

@@ -4,6 +4,7 @@ import { Game as MainGame } from "./scenes/Game";
 import { MainMenu } from "./scenes/MainMenu";
 import { LevelUpScreen } from "./scenes/LevelUpScreen";
 import { ControlsScene } from "./scenes/ControlsScene";
+import { HighScoreScene } from "./scenes/HighScoreScene";
 import { AUTO, Game } from "phaser";
 import { Preloader } from "./scenes/Preloader";
 import { GAME_CONFIG } from "./config/GameConfig";
@@ -31,6 +32,7 @@ const config: Phaser.Types.Core.GameConfig = {
         Preloader,
         MainMenu,
         ControlsScene,
+        HighScoreScene,
         MainGame,
         GameOver,
         LevelUpScreen,

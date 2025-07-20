@@ -12,6 +12,7 @@ import { Game } from "../scenes/Game";
 import { EnemyType } from "../types/GameTypes";
 import { GAME_CONFIG } from "../config/GameConfig";
 import { PowerType } from "../types/GameTypes";
+import { HighScoreScene } from "../scenes/HighScoreScene";
 
 export interface GameState {
     isPlaying: boolean;
@@ -407,6 +408,13 @@ export class GameManager {
         const finalTime = `${minutes.toString().padStart(2, "0")}:${seconds
             .toString()
             .padStart(2, "0")}`;
+
+        // Save high score
+        HighScoreScene.addHighScore(
+            this.gameState.timeElapsed,
+            finalTime,
+            this.gameState.score
+        );
 
         // Show game over screen
         this.uiSystem.showGameOver(finalTime, this.gameState.score);
