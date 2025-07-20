@@ -133,16 +133,6 @@ export class Game extends Scene {
         this.gameManager.update(deltaTime);
     }
 
-    changeScene() {
-        // Stop background music when game ends
-        this.audioManager.stopBackgroundMusic();
-
-        // Clean up particles
-        this.particleManager.destroy();
-
-        this.scene.start("GameOver");
-    }
-
     // Method to set up collision detection for enemies
     setupEnemyCollision(enemySprite: Phaser.GameObjects.Sprite): void {
         if (this.walks) {

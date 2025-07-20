@@ -416,12 +416,16 @@ export class GameManager {
             this.gameState.score
         );
 
-        // Show game over screen
-        this.uiSystem.showGameOver(finalTime, this.gameState.score);
-
         console.log(
             `Game Over! Survived: ${finalTime}, Final Score: ${this.gameState.score}`
         );
+
+        // Start the GameOver scene with data
+        this.scene.scene.start("GameOver", {
+            finalTime: finalTime,
+            finalScore: this.gameState.score,
+            timeInSeconds: this.gameState.timeElapsed,
+        });
     }
 
     getPlayer(): Player {
